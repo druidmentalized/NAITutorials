@@ -7,7 +7,8 @@ import java.util.*;
 
 public class PrepareDataset {
     private final List<Pair<String, List<Double>>> trainSet = new ArrayList<>();
-    private final List<Pair<String, List<Double>>> testSet = new ArrayList<>();
+    private final List<List<Double>> testSet = new ArrayList<>();
+    private final List<String> testLabelsSet = new ArrayList<>();
 
 
     public List<Pair<String, List<Double>>> parseDataset(String filePath) {
@@ -43,7 +44,7 @@ public class PrepareDataset {
         Map<String, List<Pair<String, List<Double>>>> classToSamples = new HashMap<>();
 
         for (Pair<String, List<Double>> pair : dataset) {
-            classToSamples.computeIfAbsent(pair.getFirst(), _ -> new ArrayList<>()).add(pair);
+            classToSamples.computeIfAbsent(pair.first(), k -> new ArrayList<>()).add(pair);
         }
 
         for (List<Pair<String, List<Double>>> samples : classToSamples.values()) {
@@ -56,7 +57,11 @@ public class PrepareDataset {
             int trainCount = Math.max(1, (int) Math.round(totalClassSize * 0.66));
 
             trainSet.addAll(samples.subList(0, trainCount));
-            testSet.addAll(samples.subList(trainCount, totalClassSize));
+
+            for (int i = trainCount; i < totalClassSize; i++) {
+                testSet.add(samples.get(i).second());
+                testLabelsSet.add(samples.get(i).first());
+            }
         }
 
         Collections.shuffle(trainSet);
@@ -66,7 +71,10 @@ public class PrepareDataset {
     public List<Pair<String, List<Double>>> getTrainSet() {
         return trainSet;
     }
-    public List<Pair<String, List<Double>>> getTestSet() {
+    public List<List<Double>> getTestSet() {
         return testSet;
+    }
+    public List<String> getTestLabelsSet() {
+        return testLabelsSet;
     }
 }

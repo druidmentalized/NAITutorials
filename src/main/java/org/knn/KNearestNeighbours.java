@@ -12,15 +12,16 @@ public class KNearestNeighbours {
         this.trainSet = trainSet;
     }
 
-    public void run(List<Double> vector) {
+    public String run(List<Double> vector) {
         calculateDistances(vector);
         sortDistances();
-        System.out.println("Predicted class: " + predict());
+        return predict();
     }
 
     private void calculateDistances(List<Double> vector) {
+        distances.clear();
         for (Pair<String, List<Double>> pair : trainSet) {
-            distances.add(new Pair<>(pair.getFirst(), calculateEuclideanDistance(pair.getSecond(), vector)));
+            distances.add(new Pair<>(pair.first(), calculateEuclideanDistance(pair.second(), vector)));
         }
     }
 
@@ -62,7 +63,7 @@ public class KNearestNeighbours {
         int i = 0, j = 0, y = 0;
 
         while (i < left.size() && j < right.size()) {
-            if (left.get(i).getSecond().compareTo(right.get(j).getSecond()) <= 0) {
+            if (left.get(i).second().compareTo(right.get(j).second()) <= 0) {
                 list.set(y++, left.get(i++));
             } else {
                 list.set(y++, right.get(j++));
@@ -83,7 +84,7 @@ public class KNearestNeighbours {
 
         for (int i = 0; i < this.k; i++) {
             Pair<String, Double> pair = distances.get(i);
-            String label = pair.getFirst();
+            String label = pair.first();
             int count = countMap.getOrDefault(label, 0) + 1;
             countMap.put(label, count);
 
