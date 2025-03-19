@@ -27,17 +27,15 @@ public class KNearestNeighbours {
         }
     }
 
-    private double calculateEuclideanDistance(List<Double> a, List<Double> b) {
+    private double calculateEuclideanDistance(List<Double> vec1, List<Double> vec2) {
         double result = 0;
 
-        if (a.size() != b.size()) {
+        if (vec1.size() != vec2.size()) {
             throw new IllegalArgumentException("Vectors must be the same dimension");
         }
 
-        for (int i = 0; i < a.size(); i++) {
-            Double aVal = a.get(i);
-            Double bVal = b.get(i);
-            result += Math.pow((aVal - bVal), 2);
+        for (int i = 0; i < vec1.size(); i++) {
+            result += Math.pow((vec1.get(i) - vec2.get(i)), 2);
         }
 
         result = Math.sqrt(result);

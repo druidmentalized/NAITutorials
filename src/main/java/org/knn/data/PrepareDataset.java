@@ -67,7 +67,6 @@ public class PrepareDataset {
         }
 
         Collections.shuffle(trainSet);
-        Collections.shuffle(testSet);
     }
 
     public List<Pair<String, List<Double>>> getTrainSet() {
