@@ -1,4 +1,6 @@
-package org.knn;
+package org.knn.knn;
+
+import org.knn.models.Pair;
 
 import java.util.*;
 

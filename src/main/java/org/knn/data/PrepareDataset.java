@@ -1,4 +1,6 @@
-package org.knn;
+package org.knn.data;
+
+import org.knn.models.Pair;
 
 import java.io.BufferedReader;
 import java.io.FileReader;

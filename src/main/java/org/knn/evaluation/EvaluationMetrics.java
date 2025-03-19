@@ -1,4 +1,7 @@
-package org.knn;
+package org.knn.evaluation;
+
+import org.knn.knn.KNearestNeighbours;
+import org.knn.data.PrepareDataset;
 
 public class EvaluationMetrics {
     private final int k;
