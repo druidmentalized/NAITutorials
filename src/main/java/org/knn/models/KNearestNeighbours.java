@@ -1,41 +1,39 @@
-package org.knn.knn;
+package org.knn.models;
 
-import org.knn.models.Pair;
+import org.knn.structures.Pair;
 
 import java.util.*;
 
-public class KNearestNeighbours {
-    private final int k;
-    private final List<Pair<String, List<Double>>> trainSet;
-    private final List<Pair<String, Double>> distances = new ArrayList<>();
+public class KNearestNeighbours implements Classifier {
+    private List<Pair<Integer, double[]>> trainSet;
+    private int k;
+    private List<Pair<Integer, Double>> distances;
 
-    public KNearestNeighbours(int k, List<Pair<String, List<Double>>> trainSet) {
+    public KNearestNeighbours() {
+        k = 3;
+    }
+
+    public KNearestNeighbours(int k) {
         this.k = k;
-        this.trainSet = trainSet;
     }
 
-    public String run(List<Double> vector) {
-        calculateDistances(vector);
-        sortDistances();
-        return predict();
-    }
-
-    private void calculateDistances(List<Double> vector) {
-        distances.clear();
-        for (Pair<String, List<Double>> pair : trainSet) {
+    private List<Pair<Integer, Double>> calculateDistances(double[] vector) {
+        List<Pair<Integer, Double>> distances = new ArrayList<>();
+        for (Pair<Integer, double[]> pair : trainSet) {
             distances.add(new Pair<>(pair.first(), calculateEuclideanDistance(pair.second(), vector)));
         }
+        return distances;
     }
 
-    private double calculateEuclideanDistance(List<Double> vec1, List<Double> vec2) {
+    private double calculateEuclideanDistance(double[] vec1, double[] vec2) {
         double result = 0;
 
-        if (vec1.size() != vec2.size()) {
+        if (vec1.length != vec2.length) {
             throw new IllegalArgumentException("Vectors must be the same dimension");
         }
 
-        for (int i = 0; i < vec1.size(); i++) {
-            result += Math.pow((vec1.get(i) - vec2.get(i)), 2);
+        for (int i = 0; i < vec1.length; i++) {
+            result += Math.pow((vec1[i] - vec2[i]), 2);
         }
 
         result = Math.sqrt(result);
@@ -77,23 +75,23 @@ public class KNearestNeighbours {
         }
     }
 
-    private String findPredictedClass() {
-        HashMap<String, Integer> countMap = new HashMap<>();
+    private int findPredictedClass() {
+        HashMap<Integer, Integer> countMap = new HashMap<>();
         int maxCount = 0;
-        List<String> mostFrequentClasses = new ArrayList<>();
+        List<Integer> mostFrequentClasses = new ArrayList<>();
 
         for (int i = 0; i < this.k; i++) {
-            Pair<String, Double> pair = distances.get(i);
-            String label = pair.first();
-            int count = countMap.getOrDefault(label, 0) + 1;
-            countMap.put(label, count);
+            Pair<Integer, Double> pair = distances.get(i);
+            int labelEncoded = pair.first();
+            int count = countMap.getOrDefault(labelEncoded, 0) + 1;
+            countMap.put(labelEncoded, count);
 
             if (count > maxCount) {
                 maxCount = count;
                 mostFrequentClasses.clear();
-                mostFrequentClasses.add(label);
+                mostFrequentClasses.add(labelEncoded);
             } else if (count == maxCount) {
-                mostFrequentClasses.add(label);
+                mostFrequentClasses.add(labelEncoded);
             }
         }
 
@@ -104,7 +102,21 @@ public class KNearestNeighbours {
         return mostFrequentClasses.getFirst();
     }
 
-    private String predict() {
+    @Override
+    public void train(List<Pair<Integer, double[]>> trainSet) {
+        this.trainSet = trainSet;
+    }
+
+    @Override
+    public int predict(double[] vector) {
+        distances = calculateDistances(vector);
+        sortDistances();
         return findPredictedClass();
+    }
+
+    // Helper
+
+    public void setK(int k) {
+        this.k = k;
     }
 }

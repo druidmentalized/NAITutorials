@@ -1,6 +1,7 @@
 package org.knn.data;
 
-import org.knn.models.Pair;
+import org.knn.structures.Pair;
+import org.knn.utils.LabelEncoder;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -8,31 +9,34 @@ import java.io.IOException;
 import java.util.*;
 
 public class PrepareDataset {
-    private final List<Pair<String, List<Double>>> trainSet = new ArrayList<>();
-    private final List<List<Double>> testSet = new ArrayList<>();
-    private final List<String> testLabelsSet = new ArrayList<>();
-
-
-    public List<Pair<String, List<Double>>> parseDataset(String filePath) {
-        List<Pair<String, List<Double>>> dataset = new ArrayList<>();
+    public List<Pair<Integer, double[]>> parseDataset(String filePath, LabelEncoder encoder) {
+        List<Pair<Integer, double[]>> dataset = new ArrayList<>();
 
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader(filePath))) {
             String line;
 
             while ((line = bufferedReader.readLine()) != null) {
                 String[] tokens = line.split(",");
-                List<Double> vector = new ArrayList<>();
-                String className = "";
+                List<Double> vectorList = new ArrayList<>();
+                String labelStr = "";
+
                 for (String token : tokens) {
                     try {
-                        vector.add(Double.parseDouble(token));
-                    }
-                    catch (NumberFormatException e) {
-                        className = token;
+                        vectorList.add(Double.parseDouble(token));
+                    } catch (NumberFormatException e) {
+                        labelStr = token;
                         break;
                     }
                 }
-                dataset.add(new Pair<>(className, vector));
+
+                int encodedLabel = encoder.encode(labelStr);
+
+                double[] vector = new double[vectorList.size()];
+                for (int i = 0; i < vectorList.size(); i++) {
+                    vector[i] = vectorList.get(i);
+                }
+
+                dataset.add(new Pair<>(encodedLabel, vector));
             }
 
         } catch (IOException e) {
@@ -42,40 +46,28 @@ public class PrepareDataset {
         return dataset;
     }
 
-    public void trainTestSplit(List<Pair<String, List<Double>>> dataset) {
-        Map<String, List<Pair<String, List<Double>>>> classToSamples = new HashMap<>();
+    public SplitDataset trainTestSplit(List<Pair<Integer, double[]>> dataset, double trainRatio) {
+        List<Pair<Integer, double[]>> trainSet = new ArrayList<>();
+        List<Pair<Integer, double[]>> testSet = new ArrayList<>();
 
-        for (Pair<String, List<Double>> pair : dataset) {
-            classToSamples.computeIfAbsent(pair.first(), k -> new ArrayList<>()).add(pair);
+        Map<Integer, List<Pair<Integer, double[]>>> classToSamples = new HashMap<>();
+        for (Pair<Integer, double[]> pair : dataset) {
+            classToSamples.computeIfAbsent(pair.first(), _ -> new ArrayList<>()).add(pair);
         }
 
-        for (List<Pair<String, List<Double>>> samples : classToSamples.values()) {
+        for (List<Pair<Integer, double[]>> samples : classToSamples.values()) {
             Collections.shuffle(samples);
         }
 
-        for (String className : classToSamples.keySet()) {
-            List<Pair<String, List<Double>>> samples = classToSamples.get(className);
+        for (List<Pair<Integer, double[]>> samples : classToSamples.values()) {
+            Collections.shuffle(samples);
             int totalClassSize = samples.size();
-            int trainCount = Math.max(1, (int) Math.round(totalClassSize * 0.66));
+            int trainCount = Math.max(1, (int) Math.round(totalClassSize * trainRatio));
 
             trainSet.addAll(samples.subList(0, trainCount));
-
-            for (int i = trainCount; i < totalClassSize; i++) {
-                testSet.add(samples.get(i).second());
-                testLabelsSet.add(samples.get(i).first());
-            }
+            testSet.addAll(samples.subList(trainCount, totalClassSize));
         }
 
-        Collections.shuffle(trainSet);
-    }
-
-    public List<Pair<String, List<Double>>> getTrainSet() {
-        return trainSet;
-    }
-    public List<List<Double>> getTestSet() {
-        return testSet;
-    }
-    public List<String> getTestLabelsSet() {
-        return testLabelsSet;
+        return new SplitDataset(trainSet, testSet);
     }
 }

@@ -1,29 +1,37 @@
 package org.knn.evaluation;
 
-import org.knn.knn.KNearestNeighbours;
+import org.knn.data.SplitDataset;
+import org.knn.models.Classifier;
+import org.knn.models.KNearestNeighbours;
 import org.knn.data.PrepareDataset;
+import org.knn.structures.Pair;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class EvaluationMetrics {
-    private final int k;
-    private final PrepareDataset prepareDataset;
+    Classifier classifier;
+    SplitDataset dataset;
 
-    public EvaluationMetrics(int k, PrepareDataset prepareDataset) {
-        this.k = k;
-        this.prepareDataset = prepareDataset;
+    public EvaluationMetrics(Classifier classifier, SplitDataset dataset) {
+        this.classifier = classifier;
+        this.dataset = dataset;
     }
 
     public void measureAccuracy() {
+        classifier.train(dataset.getTrainSet());
+
         int correctPredictionsCount = 0;
 
-        KNearestNeighbours knn = new KNearestNeighbours(k, prepareDataset.getTrainSet());
-        for (int i = 0; i < prepareDataset.getTestSet().size(); i++) {
-            String answer = knn.run(prepareDataset.getTestSet().get(i));
-            if (answer.equals(prepareDataset.getTestLabelsSet().get(i))) {
-                correctPredictionsCount++;
-            }
+        List<double[]> testSetVectors = dataset.getTestSetVectors();
+        List<Integer> testSetLabels = dataset.getTestSetLabels();
+
+        for (int i = 0; i < testSetVectors.size(); i++) {
+            int answer = classifier.predict(testSetVectors.get(i));
+            if (answer == testSetLabels.get(i)) correctPredictionsCount++;
         }
 
-        double number = (double) correctPredictionsCount / prepareDataset.getTestSet().size();
-        System.out.printf("For the nearest " + k + " observations, the correct predictions count is: %.2f%%%n", number * 100);
+        double number = (double) correctPredictionsCount / testSetVectors.size();
+        System.out.printf("Correct predictions count is: %.2f%%%n", number * 100);
     }
 }

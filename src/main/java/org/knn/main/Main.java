@@ -1,8 +1,11 @@
-package org.knn;
+package org.knn.main;
 
 import org.knn.data.PrepareDataset;
+import org.knn.data.SplitDataset;
 import org.knn.evaluation.EvaluationMetrics;
-import org.knn.knn.KNearestNeighbours;
+import org.knn.models.KNearestNeighbours;
+import org.knn.models.Perceptron;
+import org.knn.utils.LabelEncoder;
 
 import java.util.*;
 
@@ -10,34 +13,41 @@ public class Main {
     private static final PrepareDataset prepareDataset = new PrepareDataset();
 
     public static void main(String[] args) {
-        prepareDataset.trainTestSplit(prepareDataset.parseDataset("src/main/resources/iris.csv"));
-        System.out.println("Testcase 1:");
-        EvaluationMetrics evaluationMetrics = new EvaluationMetrics(3, prepareDataset);
+        LabelEncoder encoder = new LabelEncoder();
+        PrepareDataset prepareDataset = new PrepareDataset();
+        var dataset = prepareDataset.parseDataset("src/main/resources/iris.csv", encoder);
+        SplitDataset splitDataset = prepareDataset.trainTestSplit(dataset, 0.66);
+        KNearestNeighbours knn = new KNearestNeighbours();
+        EvaluationMetrics evaluationMetrics = new EvaluationMetrics(knn, splitDataset);
+
+
+        System.out.println("Testcase 1, k=3:");
+        knn.setK(3);
         evaluationMetrics.measureAccuracy();
         System.out.println("────────────────────────────────────────────────────────────────────────────────────");
 
-        System.out.println("Testcase 2:");
-        evaluationMetrics = new EvaluationMetrics(7, prepareDataset);
+        System.out.println("Testcase 2, k=7:");
+        knn.setK(7);
         evaluationMetrics.measureAccuracy();
         System.out.println("────────────────────────────────────────────────────────────────────────────────────");
 
-        System.out.println("Testcase 3:");
-        evaluationMetrics = new EvaluationMetrics(11, prepareDataset);
+        System.out.println("Testcase 3, k=11:");
+        knn.setK(11);
         evaluationMetrics.measureAccuracy();
         System.out.println("────────────────────────────────────────────────────────────────────────────────────");
 
-        System.out.println("Testcase 4:");
-        evaluationMetrics = new EvaluationMetrics(15, prepareDataset);
+        System.out.println("Testcase 4, k=15:");
+        knn.setK(15);
         evaluationMetrics.measureAccuracy();
         System.out.println("────────────────────────────────────────────────────────────────────────────────────");
 
-        System.out.println("Testcase 5:");
-        evaluationMetrics = new EvaluationMetrics(20, prepareDataset);
+        System.out.println("Testcase 5, k=20:");
+        knn.setK(20);
         evaluationMetrics.measureAccuracy();
         System.out.println("────────────────────────────────────────────────────────────────────────────────────");
 
         System.out.println();
-        startUserInput();
+
     }
 
     private static void startUserInput() {
@@ -86,7 +96,7 @@ public class Main {
             }
         }
 
-        KNearestNeighbours knn = new KNearestNeighbours(nearestObservations, prepareDataset.getTrainSet());
-        System.out.println("Your vector with " + nearestObservations + " observations should be in " + knn.run(vector));
+        //KNearestNeighbours knn = new KNearestNeighbours(nearestObservations, prepareDataset.getTrainSet());
+        //System.out.println("Your vector with " + nearestObservations + " observations should be in " + knn.run(vector));
     }
 }
