@@ -23,7 +23,7 @@ public class Main {
         System.out.println();
         runPerceptronTests(splitDataset);
 
-        startUserInput(splitDataset);
+        startUserInput(splitDataset, encoder);
     }
 
     private static void runKNNTests(SplitDataset splitDataset) {
@@ -64,7 +64,7 @@ public class Main {
         evaluationMetrics.measureAccuracy();
     }
 
-    private static void startUserInput(SplitDataset splitDataset) {
+    private static void startUserInput(SplitDataset splitDataset, LabelEncoder encoder) {
         Scanner scanner = new Scanner(System.in);
         boolean exit = true;
         while (exit) {
@@ -74,7 +74,7 @@ public class Main {
             System.out.println("Enter your choice: ");
 
             switch (scanner.nextLine()) {
-                case "1" -> predictFromUserInput(splitDataset, scanner, new KNearestNeighbours(), new Perceptron(0.5));
+                case "1" -> predictFromUserInput(splitDataset, scanner, new KNearestNeighbours(), new Perceptron(0.5), encoder);
                 case "2" -> exit = false;
                 default -> System.out.println("Unknown action. Try again.");
             }
@@ -85,8 +85,8 @@ public class Main {
 
     private static void predictFromUserInput(SplitDataset splitDataset, Scanner scanner,
                                              KNearestNeighbours knnClassifier,
-                                             Perceptron perceptronClassifier) {
-        // 1. Choose which classifier to use
+                                             Perceptron perceptronClassifier,
+                                             LabelEncoder encoder) {
         System.out.println("Choose a classifier:\n1) KNN\n2) Perceptron");
         String choice = scanner.nextLine();
 
@@ -102,7 +102,6 @@ public class Main {
 
         chosenClassifier.train(splitDataset.getTrainSet());
 
-        // 2. If KNN, ask for the number of nearest observations
         int nearestObservations;
         if (chosenClassifier instanceof KNearestNeighbours) {
             System.out.println("Enter number of nearest observations:");
@@ -117,11 +116,8 @@ public class Main {
                     System.err.println("Not a number. Try again.");
                 }
             }
-            // If your KNN class has a setter for 'k', you could do:
-            // ((KNearestNeighbours) chosenClassifier).setK(nearestObservations);
         }
 
-        // 3. Gather user input for the feature vector
         List<Double> vector = new ArrayList<>();
         System.out.println("Enter numbers for the vector (empty line to finish):");
         String input;
@@ -133,19 +129,15 @@ public class Main {
             }
         }
 
-        // Convert List<Double> to double[]
         double[] featureArray = new double[vector.size()];
         for (int i = 0; i < vector.size(); i++) {
             featureArray[i] = vector.get(i);
         }
 
-        // 4. Predict
         int predictedLabel = chosenClassifier.predict(featureArray);
-        System.out.println("Predicted label (encoded integer): " + predictedLabel);
+        System.out.println("Predicted label (encoded integer): " + encoder.decode(predictedLabel));
 
-        // 5. If Perceptron, optionally show an ASCII plot of the decision boundary
         if (isPerceptron) {
-            // Example: Suppose you want to visualize from x=0 to x=10 in 50 steps
             double minX = 0.0;
             double maxX = 10.0;
             int steps = 50;
@@ -162,7 +154,6 @@ public class Main {
             System.out.println("ASCII plot of the decision boundary:");
             plotter.asciiPlot(someTestPoints);
 
-            // Or you could export the boundary to CSV:
             plotter.exportBoundaryToCsv("src/main/resources/boundary.csv");
         }
     }
