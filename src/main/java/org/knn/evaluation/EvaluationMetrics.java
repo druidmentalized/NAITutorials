@@ -32,6 +32,6 @@ public class EvaluationMetrics {
         }
 
         double number = (double) correctPredictionsCount / testSetVectors.size();
-        System.out.printf("Correct predictions count is: %.2f%%%n", number * 100);
+        System.out.printf("Evaluated predictions count is: %.2f%%%n", number * 100);
     }
 }
