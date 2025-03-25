@@ -17,8 +17,6 @@ Each task is located under its own package inside the `src/main/java/org/ml/` (o
 - **`structures/`** - Basic structures used all over the program
 - **`utils/`** – Utility needed for the program
 
-You can easily add more packages for future tasks (e.g., Decision Trees, Naive Bayes, or Neural Networks).
-
 ---
 
 ## 🔍 Topics Covered
