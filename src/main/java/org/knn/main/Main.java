@@ -145,14 +145,10 @@ public class Main {
             double maxX = 10.0;
             int steps = 50;
 
-            // If your Perceptron has exactly 2 weights, you can do an ASCII plot
             Perceptron p = (Perceptron) chosenClassifier;
             DecisionBoundaryPlotter plotter = new DecisionBoundaryPlotter(p, minX, maxX, steps);
 
-            // If you want to plot some 2D dataset points along with the boundary:
-            // (You can pass in your test set or a small list of data points)
             List<Pair<Integer, double[]>> someTestPoints = new ArrayList<>();
-            // Populate someTestPoints with 2D samples if you have them
 
             System.out.println("ASCII plot of the decision boundary:");
             plotter.asciiPlot(someTestPoints);

@@ -16,7 +16,6 @@ public class Perceptron implements Classifier {
         this.alpha = alpha;
     }
 
-
     @Override
     public void train(List<Pair<Integer, double[]>> trainSet) {
         System.out.println("Training of the perceptron:");
