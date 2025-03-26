@@ -62,6 +62,9 @@ public class Main {
         EvaluationMetrics evaluationMetrics = new EvaluationMetrics(perceptron, splitDataset);
         System.out.println("Testing of the Perceptron algorithm");
         evaluationMetrics.measureAccuracy();
+        double precision = evaluationMetrics.evaluatePrecision(splitDataset.getTestSetLabels().getFirst());
+        double recall = evaluationMetrics.evaluateRecall(splitDataset.getTestSetLabels().getFirst());
+        evaluationMetrics.evaluateF1Measure(precision, recall);
     }
 
     private static void startUserInput(SplitDataset splitDataset, LabelEncoder encoder) {
