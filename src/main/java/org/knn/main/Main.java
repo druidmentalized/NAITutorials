@@ -6,6 +6,7 @@ import org.knn.evaluation.EvaluationMetrics;
 import org.knn.models.Classifier;
 import org.knn.models.KNearestNeighbours;
 import org.knn.models.Perceptron;
+import org.knn.models.SingleLayerNeuralNetwork;
 import org.knn.plot.DecisionBoundaryPlotter;
 import org.knn.structures.Pair;
 import org.knn.utils.LabelEncoder;
@@ -16,14 +17,18 @@ public class Main {
     public static void main(String[] args) {
         LabelEncoder encoder = new LabelEncoder();
         PrepareDataset prepareDataset = new PrepareDataset();
-        var dataset = prepareDataset.parseDataset("src/main/resources/iris.csv", encoder);
+        var dataset = prepareDataset.parseDataset("src/main/resources/languagesdataset", encoder);
         SplitDataset splitDataset = prepareDataset.trainTestSplit(dataset, 0.66);
 
-        runKNNTests(splitDataset);
+        //runKNNTests(splitDataset);
+        //System.out.println();
+        //runPerceptronTests(splitDataset);
         System.out.println();
-        runPerceptronTests(splitDataset);
+        int classesAmount = encoder.getClassesAmount();
+        runSingleLayerNeuralNetworkTests(splitDataset, classesAmount);
 
-        startUserInput(splitDataset, encoder);
+
+        //startUserInput(splitDataset, encoder);
     }
 
     private static void runKNNTests(SplitDataset splitDataset) {
@@ -61,6 +66,16 @@ public class Main {
         Perceptron perceptron = new Perceptron(0.5);
         EvaluationMetrics evaluationMetrics = new EvaluationMetrics(perceptron, splitDataset);
         System.out.println("Testing of the Perceptron algorithm");
+        evaluationMetrics.measureAccuracy();
+        double precision = evaluationMetrics.evaluatePrecision(splitDataset.getTestSetLabels().getFirst());
+        double recall = evaluationMetrics.evaluateRecall(splitDataset.getTestSetLabels().getFirst());
+        evaluationMetrics.evaluateF1Measure(precision, recall);
+    }
+
+    private static void runSingleLayerNeuralNetworkTests(SplitDataset splitDataset, int classesAmount) {
+        SingleLayerNeuralNetwork singleLayerNeuralNetwork = new SingleLayerNeuralNetwork(0.5, 0.0, classesAmount);
+        EvaluationMetrics evaluationMetrics = new EvaluationMetrics(singleLayerNeuralNetwork, splitDataset);
+        System.out.println("Testing of the Single Layer Neural Network algorithm");
         evaluationMetrics.measureAccuracy();
         double precision = evaluationMetrics.evaluatePrecision(splitDataset.getTestSetLabels().getFirst());
         double recall = evaluationMetrics.evaluateRecall(splitDataset.getTestSetLabels().getFirst());

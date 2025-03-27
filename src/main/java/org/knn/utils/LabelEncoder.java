@@ -23,4 +23,8 @@ public class LabelEncoder {
     public int decode(String label) {
         return labelToIndex.get(label);
     }
+
+    public int getClassesAmount() {
+        return labelToIndex.size();
+    }
 }

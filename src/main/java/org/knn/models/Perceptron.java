@@ -64,7 +64,7 @@ public class Perceptron implements Classifier {
     }
 
     // Helper
-    private double dotProduct(double[] vec1, double[] vec2) {
+    public double dotProduct(double[] vec1, double[] vec2) {
         if (vec1.length != vec2.length) {
             System.err.println("Can't calculate dot product of different vectors!");
             return 0;
