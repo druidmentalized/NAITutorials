@@ -8,7 +8,6 @@ import org.knn.models.KNearestNeighbours;
 import org.knn.models.Perceptron;
 import org.knn.models.SingleLayerNeuralNetwork;
 import org.knn.plot.DecisionBoundaryPlotter;
-import org.knn.structures.Pair;
 import org.knn.utils.LabelEncoder;
 
 import java.util.*;
