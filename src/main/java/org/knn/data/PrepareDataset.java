@@ -80,6 +80,7 @@ public class PrepareDataset {
                     StringBuilder content = new StringBuilder();
                     String line;
                     while ((line = br.readLine()) != null) {
+                        if (line.isEmpty()) continue;
                         content.append(line).append(" ");
                     }
 
@@ -116,11 +117,14 @@ public class PrepareDataset {
             testSet.addAll(samples.subList(trainCount, totalClassSize));
         }
 
+        Collections.shuffle(trainSet);
+        Collections.shuffle(testSet);
+
         return new SplitDataset(trainSet, testSet);
     }
 
-    public double[] textToVector(String text) {
-        double[] vector = new double[text.length()];
+    public static double[] textToVector(String text) {
+        double[] vector = new double[26];
         text = text.toLowerCase().replaceAll("[^a-z]", "");
 
         for (char ch : text.toCharArray()) {

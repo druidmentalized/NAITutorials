@@ -2,12 +2,11 @@ package org.knn.models;
 
 import org.knn.structures.Pair;
 
-import java.util.Arrays;
 import java.util.List;
 
 public class Perceptron implements Classifier {
     private double[] weights;
-    private final double alpha;
+    private double alpha;
 
     private int epochs;
     private double threshold = 0;
@@ -18,8 +17,6 @@ public class Perceptron implements Classifier {
 
     @Override
     public void train(List<Pair<Integer, double[]>> trainSet) {
-        System.out.println("Training of the perceptron:");
-
         weights = new double[trainSet.getFirst().second().length];
         for (; ; epochs++) {
             int errors = 0;
@@ -27,16 +24,12 @@ public class Perceptron implements Classifier {
                 if (adjustWeights(pair.second(), pair.first())) errors++;
             }
 
-            System.out.println("Epoch " + (epochs + 1) + ": Weights = " + Arrays.toString(weights) + ", Threshold = " + threshold);
-            double number = (double) (trainSet.size() - errors) / trainSet.size();
-            System.out.printf("Correct predictions count is: %.2f%%%n\n", number * 100);
-
             if (errors == 0) {
                 System.out.println("Training complete after " + (epochs + 1) + " epochs.\n");
                 break;
             }
-            else if (epochs > 100) {
-                System.out.println("Training forcibly stopped after " + (epochs + 1) + " epochs.\n");
+            else if (epochs >= 1000) {
+                System.out.println("Training forcibly stopped after " + (epochs) + " epochs.\n");
                 break;
             }
         }
@@ -81,11 +74,14 @@ public class Perceptron implements Classifier {
 
     // Getters & Setters
 
-
     public double[] getWeights() {
         return weights;
     }
     public double getThreshold() {
         return threshold;
+    }
+
+    public void setAlpha(double alpha) {
+        this.alpha = alpha;
     }
 }

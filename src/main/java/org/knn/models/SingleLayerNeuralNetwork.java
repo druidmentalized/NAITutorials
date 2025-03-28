@@ -8,8 +8,8 @@ import java.util.List;
 public class SingleLayerNeuralNetwork implements Classifier {
 
     private final List<Perceptron> neurons = new ArrayList<>();
-    private final double alpha;
-    private final double beta;
+    private double alpha;
+    private double beta;
 
     public SingleLayerNeuralNetwork(double alpha, double beta, int classes) {
         this.alpha = alpha;
@@ -29,6 +29,7 @@ public class SingleLayerNeuralNetwork implements Classifier {
                 binaryTrainSet.add(new Pair<>(label, sample.second()));
             }
 
+            System.out.println("Training perceptron for class " + classIndex + ":");
             neurons.get(classIndex).train(binaryTrainSet);
         }
     }
@@ -41,14 +42,17 @@ public class SingleLayerNeuralNetwork implements Classifier {
         for (int i = 0; i < neurons.size(); i++) {
             Perceptron neuron = neurons.get(i);
             double netValue = neuron.dotProduct(input, neuron.getWeights()) - neuron.getThreshold();
-            int prediction = neuron.predict(input);
 
-            if (prediction == 1 && netValue > highestNet) {
+            if (netValue > highestNet) {
                 highestNet = netValue;
                 bestClass = i;
             }
         }
 
         return bestClass;
+    }
+
+    public void setAlpha(double alpha) {
+        this.alpha = alpha;
     }
 }
