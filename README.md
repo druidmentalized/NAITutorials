@@ -8,28 +8,36 @@ This repository contains a set of Java-based machine learning tasks developed fo
 
 Each task is located under its own package inside the `src/main/java/org/ml/` (or `com.example.ml`) directory:
 
-- **`Main.java`** - Entry point of the program
+- **`Main.java`** - Entry point of the program.
 - **`data/`** – Utilities for parsing CSV files, splitting data into train/test sets, and encoding labels.
 - **`evaluation/`** – Contains evaluation metrics (accuracy, confusion matrix, etc.).
-- **`main/`** - Main classes
-- **`models/`** - Different classifying models
-- **`plot/`** - Plotting utilities
-- **`structures/`** - Basic structures used all over the program
-- **`utils/`** – Utility needed for the program
+- **`exceptions/`** - Exceptions, which may be met during the program runtime.
+- **`main/`** - Main classes.
+- **`models/`** - Different classifying models.
+- **`plot/`** - Plotting utilities.
+- **`structures/`** - Basic structures used all over the program.
+- **`utils/`** – Utility needed for the program.
 
 ---
 
 ## 🔍 Topics Covered
 
-- **Task 1: Perceptron**
+- **Task 1: KNN (K-Nearest Neighbors)**
+    - Implements a basic **KNN classifier** with a custom sorting routine and tie-breaking logic.
+    - Demonstrates **multi-class classification** on the Iris dataset.
+    - Explores how changing **k** affects prediction accuracy.
+
+- **Task 2: Perceptron**
     - Implements the **Delta Rule** (gradient-based) for a single-layer perceptron.
     - Demonstrates **binary classification** on a 2D subset of the Iris dataset.
     - Shows how to plot the **decision boundary** in ASCII or export boundary points to a CSV file.
 
-- **Task 2: KNN (K-Nearest Neighbors)**
-    - Implements a basic **KNN classifier** with a custom sorting routine and tie-breaking logic.
-    - Demonstrates **multi-class classification** on the Iris dataset.
-    - Explores how changing **k** affects prediction accuracy.
+- **Task 3: Single-Layer Neural Network**
+    - Implements a basic one-vs-rest neural architecture using multiple perceptrons.
+    - Designed for multi-class classification of text-based language detection tasks. 
+    - Each perceptron is trained to recognize one language by distinguishing it from others.
+    - Supports text vectorization through normalized letter-frequency mapping (a–z).
+    - Demonstrates prediction on both vectorized inputs and raw user-provided text.
 
 - **Shared Utilities**
     - **`LabelEncoder`** for converting string labels (e.g., `"setosa"`) to integers and back.
