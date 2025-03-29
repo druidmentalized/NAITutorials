@@ -16,8 +16,13 @@ public class Main {
     public static void main(String[] args) {
         LabelEncoder encoder = new LabelEncoder();
         PrepareDataset prepareDataset = new PrepareDataset();
-        var dataset = prepareDataset.parseDataset("src/main/resources/languagesdataset", encoder);
-        SplitDataset splitDataset = prepareDataset.trainTestSplit(dataset, 0.66);
+
+        //var dataset = prepareDataset.parseDataset("src/main/resources/languagesdataset", encoder, false);
+        //SplitDataset splitDataset = prepareDataset.trainTestSplit(dataset, 0.66);
+
+        var trainSet = prepareDataset.parseDataset("src/main/resources/csv/lang.train.csv", encoder, true);
+        var testSet = prepareDataset.parseDataset("src/main/resources/csv/lang.test.csv", encoder, true);
+        SplitDataset splitDataset = new SplitDataset(trainSet, testSet);
 
         int classesAmount = encoder.getClassesAmount();
         runKNNTests(splitDataset);

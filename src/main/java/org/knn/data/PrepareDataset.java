@@ -11,9 +11,13 @@ import java.io.IOException;
 import java.util.*;
 
 public class PrepareDataset {
-    public List<Pair<Integer, double[]>> parseDataset(String path, LabelEncoder encoder) {
+    public List<Pair<Integer, double[]>> parseDataset(String path, LabelEncoder encoder, boolean isTextCSV) {
         if (path.endsWith(".csv")) {
-            return parseCSV(path, encoder);
+            if (isTextCSV) {
+                return parseTextCSV(path, encoder);
+            } else {
+                return parseCSV(path, encoder);
+            }
         } else {
             File file = new File(path);
             if (file.isDirectory()) {
@@ -50,6 +54,42 @@ public class PrepareDataset {
                 for (int i = 0; i < vectorList.size(); i++) {
                     vector[i] = vectorList.get(i);
                 }
+
+                dataset.add(new Pair<>(encodedLabel, vector));
+            }
+
+        } catch (IOException e) {
+            System.err.println("Reading data went wrong: " + e.getMessage());
+        }
+
+        return dataset;
+    }
+
+    private List<Pair<Integer, double[]>> parseTextCSV(String filePath, LabelEncoder encoder) {
+        List<Pair<Integer, double[]>> dataset = new ArrayList<>();
+
+        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(filePath))) {
+            String line;
+
+            while ((line = bufferedReader.readLine()) != null) {
+                // Regex splits only on first comma (outside quotes)
+                String[] parts = line.split(",", 2);
+
+                if (parts.length != 2) {
+                    System.err.println("Skipping invalid line: " + line);
+                    continue;
+                }
+
+                String labelStr = parts[0].trim();
+                String textRaw = parts[1].trim();
+
+                // Remove starting/ending quotes if present
+                if (textRaw.startsWith("\"") && textRaw.endsWith("\"")) {
+                    textRaw = textRaw.substring(1, textRaw.length() - 1);
+                }
+
+                int encodedLabel = encoder.encode(labelStr);
+                double[] vector = textToVector(textRaw);
 
                 dataset.add(new Pair<>(encodedLabel, vector));
             }
@@ -106,19 +146,12 @@ public class PrepareDataset {
 
         for (List<Pair<Integer, double[]>> samples : classToSamples.values()) {
             Collections.shuffle(samples);
-        }
-
-        for (List<Pair<Integer, double[]>> samples : classToSamples.values()) {
-            Collections.shuffle(samples);
             int totalClassSize = samples.size();
             int trainCount = Math.max(1, (int) Math.round(totalClassSize * trainRatio));
 
             trainSet.addAll(samples.subList(0, trainCount));
             testSet.addAll(samples.subList(trainCount, totalClassSize));
         }
-
-        Collections.shuffle(trainSet);
-        Collections.shuffle(testSet);
 
         return new SplitDataset(trainSet, testSet);
     }

@@ -16,7 +16,6 @@ public class EvaluationMetrics {
     }
 
     public double measureAccuracy() {
-
         int correctPredictionsCount = 0;
 
         List<double[]> testSetVectors = dataset.getTestSetVectors();
