@@ -40,8 +40,8 @@ public class SingleLayerNeuralNetwork implements Classifier {
         double highestNet = Double.NEGATIVE_INFINITY;
 
         for (int i = 0; i < neurons.size(); i++) {
-            Perceptron neuron = neurons.get(i);
-            double netValue = neuron.dotProduct(input, neuron.getWeights()) - neuron.getThreshold();
+            Perceptron perceptron = neurons.get(i);
+            double netValue = perceptron.netValue(input);
 
             if (netValue > highestNet) {
                 highestNet = netValue;

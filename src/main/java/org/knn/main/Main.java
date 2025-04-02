@@ -17,9 +17,9 @@ public class Main {
         LabelEncoder encoder = new LabelEncoder();
         PrepareDataset prepareDataset = new PrepareDataset();
 
-        //var dataset = prepareDataset.parseDataset("src/main/resources/languagesdataset", encoder, false);
-        //SplitDataset splitDataset = prepareDataset.trainTestSplit(dataset, 0.66);
-
+        /*var dataset = prepareDataset.parseDataset("src/main/resources/languagesdataset", encoder, false);
+        SplitDataset splitDataset = prepareDataset.trainTestSplit(dataset, 0.66);
+*/
         var trainSet = prepareDataset.parseDataset("src/main/resources/csv/lang.train.csv", encoder, true);
         var testSet = prepareDataset.parseDataset("src/main/resources/csv/lang.test.csv", encoder, true);
         SplitDataset splitDataset = new SplitDataset(trainSet, testSet);
@@ -27,11 +27,16 @@ public class Main {
         int classesAmount = encoder.getClassesAmount();
         runKNNTests(splitDataset);
         System.out.println();
+        System.out.println("────────────────────────────────────────────────────────────────────────────────────");
+        System.out.println();
         runPerceptronTests(splitDataset, classesAmount);
+        System.out.println();
+        System.out.println("────────────────────────────────────────────────────────────────────────────────────");
         System.out.println();
         runSingleLayerNeuralNetworkTests(splitDataset, classesAmount);
         System.out.println();
-
+        System.out.println("────────────────────────────────────────────────────────────────────────────────────");
+        System.out.println();
 
         startUserInput(splitDataset, encoder);
     }
@@ -40,44 +45,43 @@ public class Main {
         KNearestNeighbours knn = new KNearestNeighbours();
         EvaluationMetrics evaluationMetrics = new EvaluationMetrics(knn, splitDataset);
 
-        System.out.println("Testing of the KNN algorithm");
+        System.out.println("Testing of the KNN algorithm\n");
         System.out.println("Testcase 1, k=3:");
         knn.setK(3);
         evaluationMetrics.measureAccuracy();
-        System.out.println("────────────────────────────────────────────────────────────────────────────────────");
+        System.out.println();
 
         System.out.println("Testcase 2, k=7:");
         knn.setK(7);
         evaluationMetrics.measureAccuracy();
-        System.out.println("────────────────────────────────────────────────────────────────────────────────────");
+        System.out.println();
 
         System.out.println("Testcase 3, k=11:");
         knn.setK(11);
         evaluationMetrics.measureAccuracy();
-        System.out.println("────────────────────────────────────────────────────────────────────────────────────");
+        System.out.println();
 
         System.out.println("Testcase 4, k=15:");
         knn.setK(15);
         evaluationMetrics.measureAccuracy();
-        System.out.println("────────────────────────────────────────────────────────────────────────────────────");
+        System.out.println();
 
         System.out.println("Testcase 5, k=20:");
         knn.setK(20);
         evaluationMetrics.measureAccuracy();
-        System.out.println("────────────────────────────────────────────────────────────────────────────────────");
     }
 
     private static void runPerceptronTests(SplitDataset splitDataset, int classesAmount) {
+        System.out.println("Testing of the Perceptron algorithm\n");
         Perceptron perceptron = new Perceptron(0.2);
         EvaluationMetrics evaluationMetrics = new EvaluationMetrics(perceptron, splitDataset);
-        System.out.println("Testing of the Perceptron algorithm");
         outputEvaluations(evaluationMetrics, classesAmount);
     }
 
     private static void runSingleLayerNeuralNetworkTests(SplitDataset splitDataset, int classesAmount) {
-        SingleLayerNeuralNetwork singleLayerNeuralNetwork = new SingleLayerNeuralNetwork(0.2, 0.0, classesAmount);
+        System.out.println("Testing of the Single Layer Neural Network algorithm\n");
+        SingleLayerNeuralNetwork singleLayerNeuralNetwork = new SingleLayerNeuralNetwork(0.01, 0.0, classesAmount);
         EvaluationMetrics evaluationMetrics = new EvaluationMetrics(singleLayerNeuralNetwork, splitDataset);
-        System.out.println("Testing of the Single Layer Neural Network algorithm");
         outputEvaluations(evaluationMetrics, classesAmount);
     }
 

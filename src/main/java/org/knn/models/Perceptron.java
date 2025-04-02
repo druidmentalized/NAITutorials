@@ -72,6 +72,10 @@ public class Perceptron implements Classifier {
         return sum;
     }
 
+    public double netValue(double[] vec) {
+        return dotProduct(vec, weights) - threshold;
+    }
+
     // Getters & Setters
 
     public double[] getWeights() {
