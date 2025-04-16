@@ -1,6 +1,6 @@
 # MLTasks – Java Machine Learning Exercises
 
-This repository contains a set of Java-based machine learning tasks developed for the **MPP (Machine Learning in Java)** course at [Your Institution]. Each task focuses on a different algorithm or concept, supported by reusable dataset-preparation and evaluation modules.
+This repository contains a set of Java-based machine learning tasks developed for the **MPP (Machine Learning in Java)** course at Polish-Japanese Academy of Information Technology. Each task focuses on a different algorithm or concept, supported by reusable dataset-preparation and evaluation modules.
 
 ---
 
