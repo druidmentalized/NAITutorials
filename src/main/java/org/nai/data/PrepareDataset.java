@@ -2,6 +2,7 @@ package org.nai.data;
 
 import org.nai.exceptions.NoFoldersFoundException;
 import org.nai.structures.Pair;
+import org.nai.utils.FeatureEncoder;
 import org.nai.utils.LabelEncoder;
 
 import java.io.BufferedReader;
@@ -11,12 +12,12 @@ import java.io.IOException;
 import java.util.*;
 
 public class PrepareDataset {
-    public List<Pair<Integer, double[]>> parseDataset(String path, LabelEncoder encoder, boolean isTextCSV) {
+    public List<Pair<Integer, double[]>> parseDataset(String path, LabelEncoder encoder, FeatureEncoder featureEncoder, boolean isTextCSV) {
         if (path.endsWith(".csv")) {
             if (isTextCSV) {
                 return parseTextCSV(path, encoder);
             } else {
-                return parseCSV(path, encoder);
+                return parseCSV(path, encoder, featureEncoder);
             }
         } else {
             File file = new File(path);
@@ -28,7 +29,7 @@ public class PrepareDataset {
         }
     }
 
-    private List<Pair<Integer,double[]>> parseCSV(String filePath, LabelEncoder encoder) {
+    private List<Pair<Integer, double[]>> parseCSV(String filePath, LabelEncoder labelEncoder, FeatureEncoder featureEncoder) {
         List<Pair<Integer, double[]>> dataset = new ArrayList<>();
 
         try (BufferedReader bufferedReader = new BufferedReader(new FileReader(filePath))) {
@@ -36,23 +37,16 @@ public class PrepareDataset {
 
             while ((line = bufferedReader.readLine()) != null) {
                 String[] tokens = line.split(",");
-                List<Double> vectorList = new ArrayList<>();
-                String labelStr = "";
+                int lastIndex = tokens.length - 1;
 
-                for (String token : tokens) {
-                    try {
-                        vectorList.add(Double.parseDouble(token));
-                    } catch (NumberFormatException e) {
-                        labelStr = token;
-                        break;
-                    }
-                }
+                // Encode label (last column)
+                String labelStr = tokens[lastIndex];
+                int encodedLabel = labelEncoder.encode(labelStr);
 
-                int encodedLabel = encoder.encode(labelStr);
-
-                double[] vector = new double[vectorList.size()];
-                for (int i = 0; i < vectorList.size(); i++) {
-                    vector[i] = vectorList.get(i);
+                // Encode features (all but last)
+                double[] vector = new double[lastIndex];
+                for (int i = 0; i < lastIndex; i++) {
+                    vector[i] = featureEncoder.encode(i, tokens[i]);
                 }
 
                 dataset.add(new Pair<>(encodedLabel, vector));
