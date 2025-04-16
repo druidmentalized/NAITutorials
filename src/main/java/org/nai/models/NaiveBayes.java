@@ -8,13 +8,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class NaiveBayesClassifier implements Classifier {
+public class NaiveBayes implements Classifier {
 
     private final int classesAmount;
     private final boolean applySmoothingAll;
     Map<String, Double> cache = new HashMap<>();
 
-    public NaiveBayesClassifier(int classesAmount, boolean applySmoothingAll) {
+    public NaiveBayes(int classesAmount, boolean applySmoothingAll) {
         this.classesAmount = classesAmount;
         this.applySmoothingAll = applySmoothingAll;
     }

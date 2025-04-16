@@ -3,11 +3,9 @@ package org.nai.main;
 import org.nai.data.PrepareDataset;
 import org.nai.data.SplitDataset;
 import org.nai.evaluation.EvaluationMetrics;
-import org.nai.models.Classifier;
-import org.nai.models.KNearestNeighbours;
-import org.nai.models.Perceptron;
-import org.nai.models.SingleLayerNeuralNetwork;
+import org.nai.models.*;
 import org.nai.plot.DecisionBoundaryPlotter;
+import org.nai.utils.FeatureEncoder;
 import org.nai.utils.LabelEncoder;
 
 import java.util.*;
@@ -15,17 +13,18 @@ import java.util.*;
 public class Main {
     public static void main(String[] args) {
         LabelEncoder encoder = new LabelEncoder();
+        FeatureEncoder featureEncoder = new FeatureEncoder();
         PrepareDataset prepareDataset = new PrepareDataset();
 
-        /*var dataset = prepareDataset.parseDataset("src/main/resources/languagesdataset", encoder, false);
+        var dataset = prepareDataset.parseDataset("src/main/resources/csv/outGame.csv", encoder, featureEncoder,false);
         SplitDataset splitDataset = prepareDataset.trainTestSplit(dataset, 0.66);
-*/
-        var trainSet = prepareDataset.parseDataset("src/main/resources/csv/lang.train.csv", encoder, true);
+
+/*        var trainSet = prepareDataset.parseDataset("src/main/resources/csv/lang.train.csv", encoder, true);
         var testSet = prepareDataset.parseDataset("src/main/resources/csv/lang.test.csv", encoder, true);
-        SplitDataset splitDataset = new SplitDataset(trainSet, testSet);
+        SplitDataset splitDataset = new SplitDataset(trainSet, testSet);*/
 
         int classesAmount = encoder.getClassesAmount();
-        runKNNTests(splitDataset);
+        //runKNNTests(splitDataset);
         System.out.println();
         System.out.println("────────────────────────────────────────────────────────────────────────────────────");
         System.out.println();
@@ -37,8 +36,12 @@ public class Main {
         System.out.println();
         System.out.println("────────────────────────────────────────────────────────────────────────────────────");
         System.out.println();
+        runNaiveBayesTests(splitDataset, classesAmount);
+        System.out.println();
+        System.out.println("────────────────────────────────────────────────────────────────────────────────────");
+        System.out.println();
 
-        startUserInput(splitDataset, encoder);
+        startUserInput(splitDataset, encoder, featureEncoder);
     }
 
     private static void runKNNTests(SplitDataset splitDataset) {
@@ -85,6 +88,13 @@ public class Main {
         outputEvaluations(evaluationMetrics, classesAmount);
     }
 
+    private static void runNaiveBayesTests(SplitDataset splitDataset, int classesAmount) {
+        System.out.println("Testing of the Naive Bayes Network algorithm\n");
+        NaiveBayes naiveBayes = new NaiveBayes(classesAmount, true);
+        EvaluationMetrics evaluationMetrics = new EvaluationMetrics(naiveBayes, splitDataset);
+        outputEvaluations(evaluationMetrics, classesAmount);
+    }
+
     private static void outputEvaluations(EvaluationMetrics evaluationMetrics, int classesAmount) {
         evaluationMetrics.measureAccuracy();
         for (int i = 0; i < classesAmount; i++) {
@@ -95,7 +105,7 @@ public class Main {
         }
     }
 
-    private static void startUserInput(SplitDataset splitDataset, LabelEncoder encoder) {
+    private static void startUserInput(SplitDataset splitDataset, LabelEncoder encoder, FeatureEncoder featureEncoder) {
         Scanner scanner = new Scanner(System.in);
         boolean exit = true;
         while (exit) {
@@ -105,7 +115,7 @@ public class Main {
             System.out.println("Enter your choice: ");
 
             switch (scanner.nextLine()) {
-                case "1" -> predictFromUserInput(splitDataset, scanner, encoder);
+                case "1" -> predictFromUserInput(splitDataset, scanner, encoder, featureEncoder);
                 case "2" -> exit = false;
                 default -> System.out.println("Unknown action. Try again.");
             }
@@ -114,9 +124,9 @@ public class Main {
         scanner.close();
     }
 
-    private static void predictFromUserInput(SplitDataset splitDataset, Scanner scanner, LabelEncoder encoder) {
+    private static void predictFromUserInput(SplitDataset splitDataset, Scanner scanner, LabelEncoder encoder, FeatureEncoder featureEncoder) {
 
-        System.out.println("Choose a classifier:\n1) KNN\n2) Perceptron\n3) Single Layer Neural Network");
+        System.out.println("Choose a classifier:\n1) KNN\n2) Perceptron\n3) Single Layer Neural Network\n4) Naive Bayes");
         String choice = scanner.nextLine();
 
         Classifier chosenClassifier;
