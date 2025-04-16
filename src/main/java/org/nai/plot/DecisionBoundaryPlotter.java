@@ -1,7 +1,7 @@
-package org.knn.plot;
+package org.nai.plot;
 
-import org.knn.models.Perceptron;
-import org.knn.structures.Pair;
+import org.nai.models.Perceptron;
+import org.nai.structures.Pair;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;

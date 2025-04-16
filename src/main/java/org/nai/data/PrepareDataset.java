@@ -1,8 +1,8 @@
-package org.knn.data;
+package org.nai.data;
 
-import org.knn.exceptions.NoFoldersFoundException;
-import org.knn.structures.Pair;
-import org.knn.utils.LabelEncoder;
+import org.nai.exceptions.NoFoldersFoundException;
+import org.nai.structures.Pair;
+import org.nai.utils.LabelEncoder;
 
 import java.io.BufferedReader;
 import java.io.File;

@@ -1,4 +1,4 @@
-package org.knn.utils;
+package org.nai.utils;
 
 import java.util.HashMap;
 import java.util.Map;

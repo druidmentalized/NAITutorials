@@ -1,14 +1,14 @@
-package org.knn.main;
+package org.nai.main;
 
-import org.knn.data.PrepareDataset;
-import org.knn.data.SplitDataset;
-import org.knn.evaluation.EvaluationMetrics;
-import org.knn.models.Classifier;
-import org.knn.models.KNearestNeighbours;
-import org.knn.models.Perceptron;
-import org.knn.models.SingleLayerNeuralNetwork;
-import org.knn.plot.DecisionBoundaryPlotter;
-import org.knn.utils.LabelEncoder;
+import org.nai.data.PrepareDataset;
+import org.nai.data.SplitDataset;
+import org.nai.evaluation.EvaluationMetrics;
+import org.nai.models.Classifier;
+import org.nai.models.KNearestNeighbours;
+import org.nai.models.Perceptron;
+import org.nai.models.SingleLayerNeuralNetwork;
+import org.nai.plot.DecisionBoundaryPlotter;
+import org.nai.utils.LabelEncoder;
 
 import java.util.*;
 

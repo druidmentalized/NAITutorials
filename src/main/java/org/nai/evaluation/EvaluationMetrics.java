@@ -1,7 +1,7 @@
-package org.knn.evaluation;
+package org.nai.evaluation;
 
-import org.knn.data.SplitDataset;
-import org.knn.models.Classifier;
+import org.nai.data.SplitDataset;
+import org.nai.models.Classifier;
 
 import java.util.List;
 

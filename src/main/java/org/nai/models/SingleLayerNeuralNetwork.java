@@ -1,6 +1,6 @@
-package org.knn.models;
+package org.nai.models;
 
-import org.knn.structures.Pair;
+import org.nai.structures.Pair;
 
 import java.util.ArrayList;
 import java.util.List;

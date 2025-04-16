@@ -1,6 +1,6 @@
-package org.knn.data;
+package org.nai.data;
 
-import org.knn.structures.Pair;
+import org.nai.structures.Pair;
 
 import java.util.ArrayList;
 import java.util.List;
