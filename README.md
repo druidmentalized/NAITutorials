@@ -38,10 +38,17 @@ Each task is located under its own package inside the `src/main/java/org/ml/` (o
     - Each perceptron is trained to recognize one language by distinguishing it from others.
     - Supports text vectorization through normalized letter-frequency mapping (a–z).
     - Demonstrates prediction on both vectorized inputs and raw user-provided text.
+  
+- **Task 4: Naive Bayes Classifier**
+  - Implements a categorical Naive Bayes algorithm with Laplace (add-one) smoothing.
+  - Supports multi-class classification using per-feature probability caching.
+  - Encodes both labels and feature values using reusable mapping structures.
+  - Demonstrates classification on tabular categorical datasets (e.g., weather data).
+  - Evaluates precision, recall, and F-measure for each class individually.
 
 - **Shared Utilities**
     - **`LabelEncoder`** for converting string labels (e.g., `"setosa"`) to integers and back.
-    - **`PrepareDataset`** for parsing CSVs and performing **stratified train-test splits**.
+    - **`PrepareDataset`** for parsing data and performing **stratified train-test splits**.
     - **`EvaluationMetrics`** for computing accuracy and (optionally) confusion matrices.
 
 ---

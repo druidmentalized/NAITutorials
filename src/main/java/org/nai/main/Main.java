@@ -17,7 +17,7 @@ public class Main {
         PrepareDataset prepareDataset = new PrepareDataset();
 
         var dataset = prepareDataset.parseDataset("src/main/resources/csv/outGame.csv", encoder, featureEncoder,false);
-        SplitDataset splitDataset = prepareDataset.trainTestSplit(dataset, 0.66);
+        SplitDataset splitDataset = prepareDataset.trainTestSplit(dataset, 0.86);
 
 /*        var trainSet = prepareDataset.parseDataset("src/main/resources/csv/lang.train.csv", encoder, true);
         var testSet = prepareDataset.parseDataset("src/main/resources/csv/lang.test.csv", encoder, true);
