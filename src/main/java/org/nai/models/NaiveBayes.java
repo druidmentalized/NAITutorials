@@ -70,19 +70,21 @@ public class NaiveBayes implements Classifier {
 
     @Override
     public int predict(double[] input) {
-        double maxProbability = -1;
+        double maxLogProb = Double.NEGATIVE_INFINITY;
         int bestClass = -1;
 
         for (int classIndex = 0; classIndex < classesAmount; classIndex++) {
             String className = "Class=" + classIndex;
-            double probability = cache.get(className);
-            for (int columnIndex = 0; columnIndex < input.length; columnIndex++) {
-                String key = "Column=" + columnIndex + ",Value=" + input[columnIndex] + "|" + className;
-                cache.getOrDefault(key, 1e-9);
+            double logProb = Math.log(cache.get(className));
+
+            for (int col = 0; col < input.length; col++) {
+                String key = "Column=" + col + ",Value=" + input[col] + "|" + className;
+                double condProb = cache.getOrDefault(key, 1e-9);
+                logProb += Math.log(condProb);
             }
 
-            if (probability > maxProbability) {
-                maxProbability = probability;
+            if (logProb > maxLogProb) {
+                maxLogProb = logProb;
                 bestClass = classIndex;
             }
         }
