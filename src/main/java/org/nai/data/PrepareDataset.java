@@ -120,7 +120,7 @@ public class PrepareDataset {
 
         for (File langDir : folders) {
             int lbl = encoder.encode(langDir.getName());
-            File[] files = langDir.listFiles((d, n) -> n.endsWith(".txt"));
+            File[] files = langDir.listFiles((_, n) -> n.endsWith(".txt"));
             if (files == null) continue;
             for (File f : files) {
                 try (BufferedReader br = new BufferedReader(new FileReader(f))) {
@@ -148,7 +148,7 @@ public class PrepareDataset {
 
         Map<Integer,List<Pair<Integer,double[]>>> byClass = new HashMap<>();
         for (Pair<Integer,double[]> p : data) {
-            byClass.computeIfAbsent(p.first(), k -> new ArrayList<>()).add(p);
+            byClass.computeIfAbsent(p.first(), _ -> new ArrayList<>()).add(p);
         }
 
         for (List<Pair<Integer,double[]>> bucket : byClass.values()) {

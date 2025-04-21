@@ -41,7 +41,7 @@ public class Main {
         System.out.println("────────────────────────────────────────────────────────────────────────────────────");
         System.out.println();
 
-        startUserInput(splitDataset, encoder, featureEncoder);
+        startUserInput(splitDataset, encoder);
     }
 
     private static void runKNNTests(SplitDataset splitDataset) {
@@ -105,7 +105,7 @@ public class Main {
         }
     }
 
-    private static void startUserInput(SplitDataset splitDataset, LabelEncoder encoder, FeatureEncoder featureEncoder) {
+    private static void startUserInput(SplitDataset splitDataset, LabelEncoder encoder) {
         Scanner scanner = new Scanner(System.in);
         boolean exit = true;
         while (exit) {
@@ -115,7 +115,7 @@ public class Main {
             System.out.println("Enter your choice: ");
 
             switch (scanner.nextLine()) {
-                case "1" -> predictFromUserInput(splitDataset, scanner, encoder, featureEncoder);
+                case "1" -> predictFromUserInput(splitDataset, scanner, encoder);
                 case "2" -> exit = false;
                 default -> System.out.println("Unknown action. Try again.");
             }
@@ -124,98 +124,95 @@ public class Main {
         scanner.close();
     }
 
-    private static void predictFromUserInput(SplitDataset splitDataset, Scanner scanner, LabelEncoder encoder, FeatureEncoder featureEncoder) {
+    private static void predictFromUserInput(SplitDataset splitDataset,
+                                             Scanner scanner,
+                                             LabelEncoder encoder) {
+        System.out.println("Choose a classifier:");
+        System.out.println("  1) KNN");
+        System.out.println("  2) Perceptron");
+        System.out.println("  3) Single Layer Neural Network");
+        System.out.println("  4) Naive Bayes");
+        String choice = scanner.nextLine().trim();
 
-        System.out.println("Choose a classifier:\n1) KNN\n2) Perceptron\n3) Single Layer Neural Network\n4) Naive Bayes");
-        String choice = scanner.nextLine();
-
-        Classifier chosenClassifier;
-        boolean isPerceptron = false;
-
-        System.out.println("Enter learning rate (alpha):");
-        double alpha = 0.1;
-        boolean validAlpha = false;
-        while (!validAlpha) {
-            try {
-                alpha = Double.parseDouble(scanner.nextLine());
-                validAlpha = true;
-            } catch (NumberFormatException e) {
-                System.err.println("Invalid number. Try again.");
-            }
-        }
+        Classifier chosen;
+        int classesAmount = encoder.getClassesAmount();
 
         switch (choice) {
-            case "2":
-                chosenClassifier = new Perceptron(alpha);
-                isPerceptron = true;
+            case "1": {
+                // --- KNN parameters ---
+                System.out.print("Enter k (number of neighbors): ");
+                int k = Integer.parseInt(scanner.nextLine().trim());
+                KNearestNeighbours knn = new KNearestNeighbours();
+                knn.setK(k);
+                chosen = knn;
                 break;
-            case "3":
-                int classesAmount = encoder.getClassesAmount();
-                chosenClassifier = new SingleLayerNeuralNetwork(alpha, 0.0, classesAmount);
+            }
+            case "2": {
+                // --- Perceptron parameters ---
+                System.out.print("Enter learning rate α (e.g. 0.1): ");
+                double alpha = Double.parseDouble(scanner.nextLine().trim());
+                chosen = new Perceptron(alpha);
                 break;
-            default:
-                chosenClassifier = new KNearestNeighbours();
-        }
-
-
-        chosenClassifier.train(splitDataset.getTrainSet());
-
-        if (chosenClassifier instanceof KNearestNeighbours) {
-            System.out.println("Enter number of nearest observations:");
-            boolean validNumber = false;
-            while (!validNumber) {
-                String nearestObsInput = scanner.nextLine();
-                try {
-                    int nearestObservations = Integer.parseInt(nearestObsInput);
-                    ((KNearestNeighbours) chosenClassifier).setK(nearestObservations);
-                    validNumber = true;
-                } catch (NumberFormatException e) {
-                    System.err.println("Not a number. Try again.");
-                }
+            }
+            case "3": {
+                // --- Single Layer NN parameters ---
+                System.out.print("Enter learning rate α (e.g. 0.01): ");
+                double alpha3 = Double.parseDouble(scanner.nextLine().trim());
+                System.out.print("Enter momentum β (e.g. 0.0): ");
+                double beta = Double.parseDouble(scanner.nextLine().trim());
+                chosen = new SingleLayerNeuralNetwork(alpha3, beta, classesAmount);
+                break;
+            }
+            case "4": {
+                // --- Naive Bayes parameters ---
+                System.out.print("Apply Laplace smoothing to all counts? (y/n): ");
+                String yn = scanner.nextLine().trim().toLowerCase();
+                boolean smoothAll = yn.startsWith("y");
+                chosen = new NaiveBayes(classesAmount, smoothAll);
+                break;
+            }
+            default: {
+                System.err.println("Invalid selection, defaulting to KNN with k=3.");
+                KNearestNeighbours knn = new KNearestNeighbours();
+                knn.setK(3);
+                chosen = knn;
             }
         }
 
-        System.out.println("Enter '1' for numeric vector input or '2' for text input:");
-        String inputType = scanner.nextLine();
+        // Train it once on your split
+        chosen.train(splitDataset.getTrainSet());
 
-        double[] featureArray;
+        // Now read the test vector
+        System.out.println("Enter '1' to type a numeric vector or '2' for raw text:");
+        String mode = scanner.nextLine().trim();
 
-        if ("2".equals(inputType)) {
+        double[] features;
+        if (mode.equals("2")) {
             System.out.println("Enter your text:");
-            String textInput = scanner.nextLine();
-            featureArray = PrepareDataset.textToVector(textInput);
+            String text = scanner.nextLine();
+            features = PrepareDataset.textToVector(text);
         } else {
-            System.out.println("Enter numbers for the vector (comma-separated):");
-            String numericLine = scanner.nextLine();
-            String[] tokens = numericLine.trim().split(",");
-            featureArray = new double[tokens.length];
+            System.out.println("Enter comma‑separated numbers:");
+            String[] tokens = scanner.nextLine().split(",");
+            features = new double[tokens.length];
             for (int i = 0; i < tokens.length; i++) {
-                try {
-                    featureArray[i] = Double.parseDouble(tokens[i].trim());
-                } catch (NumberFormatException e) {
-                    System.err.println("Invalid number '" + tokens[i] + "'. Defaulting to 0.");
-                    featureArray[i] = 0;
-                }
+                features[i] = Double.parseDouble(tokens[i].trim());
             }
         }
 
-        int predictedLabel = chosenClassifier.predict(featureArray);
-        System.out.println("Predicted label without encoding: " + predictedLabel);
-        System.out.println("Predicted label: " + encoder.decode(predictedLabel));
+        // Predict and decode
+        int raw = chosen.predict(features);
+        String decoded = encoder.decode(raw);
+        System.out.println("→ Predicted class index: " + raw);
+        System.out.println("→ Predicted label:       " + decoded);
 
-        if (isPerceptron) {
-            double minX = 0.0;
-            double maxX = 10.0;
-            int steps = 50;
-
-            Perceptron p = (Perceptron) chosenClassifier;
-            DecisionBoundaryPlotter plotter = new DecisionBoundaryPlotter(p, minX, maxX, steps);
-
-            System.out.println("ASCII plot of the decision boundary:");
+        // If it's the Perceptron, show boundary
+        if (chosen instanceof Perceptron p) {
+            DecisionBoundaryPlotter plotter =
+                    new DecisionBoundaryPlotter(p, 0.0, 10.0, 50);
+            System.out.println("ASCII decision boundary:");
             plotter.asciiPlot(splitDataset.getTestSet());
-
             plotter.exportBoundaryToCsv("src/main/resources/boundary.csv");
         }
     }
-
 }
