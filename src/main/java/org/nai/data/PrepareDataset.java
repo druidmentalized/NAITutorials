@@ -12,12 +12,18 @@ import java.io.IOException;
 import java.util.*;
 
 public class PrepareDataset {
-    public List<Pair<Integer, double[]>> parseDataset(String path, LabelEncoder encoder, FeatureEncoder featureEncoder, boolean isTextCSV) {
+    public List<Pair<Integer, double[]>> parseDataset(
+            String path,
+            LabelEncoder encoder,
+            FeatureEncoder featureEncoder,
+            boolean isTextCSV,
+            boolean encodeFeatures
+    ) {
         if (path.endsWith(".csv")) {
             if (isTextCSV) {
                 return parseTextCSV(path, encoder);
             } else {
-                return parseCSV(path, encoder, featureEncoder);
+                return parseCSV(path, encoder, featureEncoder, encodeFeatures);
             }
         } else {
             File file = new File(path);
@@ -29,29 +35,37 @@ public class PrepareDataset {
         }
     }
 
-    private List<Pair<Integer, double[]>> parseCSV(String filePath, LabelEncoder labelEncoder, FeatureEncoder featureEncoder) {
+    // ─────────────────────────────────────────────────────────────────────
+    //                    Numeric OR Categorical CSV parser
+    // ─────────────────────────────────────────────────────────────────────
+    private List<Pair<Integer, double[]>> parseCSV(
+            String filePath,
+            LabelEncoder labelEncoder,
+            FeatureEncoder featureEncoder,
+            boolean encodeFeatures
+    ) {
         List<Pair<Integer, double[]>> dataset = new ArrayList<>();
 
-        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(filePath))) {
+        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
             String line;
-
-            while ((line = bufferedReader.readLine()) != null) {
+            while ((line = br.readLine()) != null) {
                 String[] tokens = line.split(",");
                 int lastIndex = tokens.length - 1;
 
-                // Encode label (last column)
-                String labelStr = tokens[lastIndex];
-                int encodedLabel = labelEncoder.encode(labelStr);
+                int encodedLabel = labelEncoder.encode(tokens[lastIndex].trim());
 
-                // Encode features (all but last)
                 double[] vector = new double[lastIndex];
                 for (int i = 0; i < lastIndex; i++) {
-                    vector[i] = featureEncoder.encode(i, tokens[i]);
+                    String tok = tokens[i].trim();
+                    if (encodeFeatures) {
+                        vector[i] = featureEncoder.encode(i, tok);
+                    } else {
+                        vector[i] = Double.parseDouble(tok);
+                    }
                 }
 
                 dataset.add(new Pair<>(encodedLabel, vector));
             }
-
         } catch (IOException e) {
             System.err.println("Reading data went wrong: " + e.getMessage());
         }
@@ -59,35 +73,32 @@ public class PrepareDataset {
         return dataset;
     }
 
-    private List<Pair<Integer, double[]>> parseTextCSV(String filePath, LabelEncoder encoder) {
+    // ─────────────────────────────────────────────────────────────────────
+    //                     Text‐only CSV parser (Label, "Long text…")
+    // ─────────────────────────────────────────────────────────────────────
+    private List<Pair<Integer, double[]>> parseTextCSV(
+            String filePath,
+            LabelEncoder encoder
+    ) {
         List<Pair<Integer, double[]>> dataset = new ArrayList<>();
 
-        try (BufferedReader bufferedReader = new BufferedReader(new FileReader(filePath))) {
+        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
             String line;
-
-            while ((line = bufferedReader.readLine()) != null) {
-                // Regex splits only on first comma (outside quotes)
+            while ((line = br.readLine()) != null) {
                 String[] parts = line.split(",", 2);
-
                 if (parts.length != 2) {
                     System.err.println("Skipping invalid line: " + line);
                     continue;
                 }
-
                 String labelStr = parts[0].trim();
                 String textRaw = parts[1].trim();
-
-                // Remove starting/ending quotes if present
                 if (textRaw.startsWith("\"") && textRaw.endsWith("\"")) {
                     textRaw = textRaw.substring(1, textRaw.length() - 1);
                 }
-
-                int encodedLabel = encoder.encode(labelStr);
-                double[] vector = textToVector(textRaw);
-
-                dataset.add(new Pair<>(encodedLabel, vector));
+                int lbl = encoder.encode(labelStr);
+                double[] vec = textToVector(textRaw);
+                dataset.add(new Pair<>(lbl, vec));
             }
-
         } catch (IOException e) {
             System.err.println("Reading data went wrong: " + e.getMessage());
         }
@@ -95,76 +106,73 @@ public class PrepareDataset {
         return dataset;
     }
 
-    private List<Pair<Integer,double[]>> parseTextDataset(String path, LabelEncoder encoder) {
+    // ─────────────────────────────────────────────────────────────────────
+    //                Directory‐of‐.txt‐files parser by subfolder
+    // ─────────────────────────────────────────────────────────────────────
+    private List<Pair<Integer, double[]>> parseTextDataset(
+            String path,
+            LabelEncoder encoder
+    ) {
         List<Pair<Integer, double[]>> dataset = new ArrayList<>();
-
         File mainDir = new File(path);
-        File[] languageDirectories = mainDir.listFiles(File::isDirectory);
-        if (languageDirectories == null) throw new NoFoldersFoundException("No language folders found in " + mainDir.getAbsolutePath());
+        File[] folders = mainDir.listFiles(File::isDirectory);
+        if (folders == null) throw new NoFoldersFoundException(path);
 
-        for (File languageDirectory : languageDirectories) {
-            String languageName = languageDirectory.getName();
-            int encodedLabel = encoder.encode(languageName);
-
-            File[] texts = languageDirectory.listFiles((_, name) -> name.endsWith(".txt"));
-            if (texts == null) continue;
-
-            for (File text : texts) {
-                try (BufferedReader br = new BufferedReader(new FileReader(text))) {
-                    StringBuilder content = new StringBuilder();
-                    String line;
-                    while ((line = br.readLine()) != null) {
-                        if (line.isEmpty()) continue;
-                        content.append(line).append(" ");
+        for (File langDir : folders) {
+            int lbl = encoder.encode(langDir.getName());
+            File[] files = langDir.listFiles((d, n) -> n.endsWith(".txt"));
+            if (files == null) continue;
+            for (File f : files) {
+                try (BufferedReader br = new BufferedReader(new FileReader(f))) {
+                    StringBuilder sb = new StringBuilder();
+                    String l;
+                    while ((l = br.readLine()) != null) {
+                        if (!l.isEmpty()) sb.append(l).append(' ');
                     }
-
-                    double[] vector = textToVector(content.toString());
-                    dataset.add(new Pair<>(encodedLabel, vector));
-
-                } catch (IOException e) {
-                    System.err.println("Error reading file " + text.getName() + ": " + e.getMessage());
+                    dataset.add(new Pair<>(lbl, textToVector(sb.toString())));
+                } catch (IOException ex) {
+                    System.err.println("Error reading " + f.getName() + ": " + ex.getMessage());
                 }
             }
         }
+
         return dataset;
     }
 
-    public SplitDataset trainTestSplit(List<Pair<Integer, double[]>> dataset, double trainRatio) {
-        List<Pair<Integer, double[]>> trainSet = new ArrayList<>();
-        List<Pair<Integer, double[]>> testSet = new ArrayList<>();
+    // ─────────────────────────────────────────────────────────────────────
+    //                      Stratified train/test split
+    // ─────────────────────────────────────────────────────────────────────
+    public SplitDataset trainTestSplit(List<Pair<Integer, double[]>> data, double trainRatio) {
+        List<Pair<Integer,double[]>> train = new ArrayList<>();
+        List<Pair<Integer,double[]>> test  = new ArrayList<>();
 
-        Map<Integer, List<Pair<Integer, double[]>>> classToSamples = new HashMap<>();
-        for (Pair<Integer, double[]> pair : dataset) {
-            classToSamples.computeIfAbsent(pair.first(), _ -> new ArrayList<>()).add(pair);
+        Map<Integer,List<Pair<Integer,double[]>>> byClass = new HashMap<>();
+        for (Pair<Integer,double[]> p : data) {
+            byClass.computeIfAbsent(p.first(), k -> new ArrayList<>()).add(p);
         }
 
-        for (List<Pair<Integer, double[]>> samples : classToSamples.values()) {
-            Collections.shuffle(samples);
-            int totalClassSize = samples.size();
-            int trainCount = Math.max(1, (int) Math.round(totalClassSize * trainRatio));
-
-            trainSet.addAll(samples.subList(0, trainCount));
-            testSet.addAll(samples.subList(trainCount, totalClassSize));
+        for (List<Pair<Integer,double[]>> bucket : byClass.values()) {
+            Collections.shuffle(bucket);
+            int cut = Math.max(1, (int)Math.round(bucket.size() * trainRatio));
+            train.addAll(bucket.subList(0, cut));
+            test .addAll(bucket.subList(cut, bucket.size()));
         }
-
-        return new SplitDataset(trainSet, testSet);
+        return new SplitDataset(train, test);
     }
 
+    // ─────────────────────────────────────────────────────────────────────
+    //                         Text → 26‐dim letter‐freq vector
+    // ─────────────────────────────────────────────────────────────────────
     public static double[] textToVector(String text) {
-        double[] vector = new double[26];
+        double[] vec = new double[26];
         text = text.toLowerCase().replaceAll("[^a-z]", "");
-
-        for (char ch : text.toCharArray()) {
-            if (ch >= 'a' && ch <= 'z') {
-                vector[ch - 'a']++;
-            }
+        for (char c : text.toCharArray()) {
+            vec[c - 'a']++;
         }
-
-        int total = text.length();
-        for (int i = 0; i < vector.length; i++) {
-            vector[i] /= total;
+        double len = text.length();
+        for (int i = 0; i < 26; i++) {
+            vec[i] /= len;
         }
-
-        return vector;
+        return vec;
     }
 }

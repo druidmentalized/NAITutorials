@@ -16,7 +16,7 @@ public class Main {
         FeatureEncoder featureEncoder = new FeatureEncoder();
         PrepareDataset prepareDataset = new PrepareDataset();
 
-        var dataset = prepareDataset.parseDataset("src/main/resources/csv/outGame.csv", encoder, featureEncoder,false);
+        var dataset = prepareDataset.parseDataset("src/main/resources/csv/iris.csv", encoder, featureEncoder,false, false);
         SplitDataset splitDataset = prepareDataset.trainTestSplit(dataset, 0.86);
 
 /*        var trainSet = prepareDataset.parseDataset("src/main/resources/csv/lang.train.csv", encoder, featureEncoder, true);
@@ -24,7 +24,7 @@ public class Main {
         SplitDataset splitDataset = new SplitDataset(trainSet, testSet);*/
 
         int classesAmount = encoder.getClassesAmount();
-        //runKNNTests(splitDataset);
+        runKNNTests(splitDataset);
         System.out.println();
         System.out.println("────────────────────────────────────────────────────────────────────────────────────");
         System.out.println();
