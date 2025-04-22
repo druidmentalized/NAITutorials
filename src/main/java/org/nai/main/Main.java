@@ -5,6 +5,7 @@ import org.nai.data.SplitDataset;
 import org.nai.evaluation.EvaluationMetrics;
 import org.nai.models.*;
 import org.nai.plot.DecisionBoundaryPlotter;
+import org.nai.structures.Triple;
 import org.nai.utils.FeatureEncoder;
 import org.nai.utils.LabelEncoder;
 
@@ -12,32 +13,46 @@ import java.util.*;
 
 public class Main {
     public static void main(String[] args) {
-        LabelEncoder encoder = new LabelEncoder();
-        FeatureEncoder featureEncoder = new FeatureEncoder();
         PrepareDataset prepare = new PrepareDataset();
 
-        // Preload all datasets
-        Map<String, SplitDataset> datasets = new LinkedHashMap<>();
-        datasets.put("1) Iris (numeric)",
-                prepare.trainTestSplit(
-                        prepare.parseDataset("src/main/resources/csv/iris.csv", encoder, featureEncoder, false, false),
-                        0.66));
-        datasets.put("2) outGame (categorical)",
-                prepare.trainTestSplit(
-                        prepare.parseDataset("src/main/resources/csv/outGame.csv", encoder, featureEncoder, false, true),
-                        0.86));
-        datasets.put("3) Language CSVs (text)",
-                new SplitDataset(
-                        prepare.parseDataset("src/main/resources/csv/lang.train.csv", encoder, featureEncoder, true, false),
-                        prepare.parseDataset("src/main/resources/csv/lang.test.csv", encoder, featureEncoder, true, false)
-                ));
-        datasets.put("4) Languages folder (text)",
-                prepare.trainTestSplit(
-                        prepare.parseDataset("src/main/resources/languagesdataset", encoder, featureEncoder, false, false),
-                        0.66));
+        // Preload all datasets with separate encoders
+        Map<String, Triple<SplitDataset, LabelEncoder, FeatureEncoder>> datasets = new LinkedHashMap<>();
 
-        // Choose dataset
-        SplitDataset current = chooseDataset(datasets);
+        {
+            LabelEncoder encoder = new LabelEncoder();
+            FeatureEncoder fe = new FeatureEncoder();
+            var data = prepare.parseDataset("src/main/resources/csv/iris.csv", encoder, fe, false, false);
+            var split = prepare.trainTestSplit(data, 0.66);
+            datasets.put("Iris (numeric)", new Triple<>(split, encoder, fe));
+        }
+        {
+            LabelEncoder encoder = new LabelEncoder();
+            FeatureEncoder fe = new FeatureEncoder();
+            var data = prepare.parseDataset("src/main/resources/csv/outGame.csv", encoder, fe, false, true);
+            var split = prepare.trainTestSplit(data, 0.86);
+            datasets.put("outGame (categorical)", new Triple<>(split, encoder, fe));
+        }
+        {
+            LabelEncoder encoder = new LabelEncoder();
+            FeatureEncoder fe = new FeatureEncoder();
+            var train = prepare.parseDataset("src/main/resources/csv/lang.train.csv", encoder, fe, true, false);
+            var test  = prepare.parseDataset("src/main/resources/csv/lang.test.csv", encoder, fe, true, false);
+            var split = new SplitDataset(train, test);
+            datasets.put("Language CSVs (text)", new Triple<>(split, encoder, fe));
+        }
+        {
+            LabelEncoder encoder = new LabelEncoder();
+            FeatureEncoder fe = new FeatureEncoder();
+            var data = prepare.parseDataset("src/main/resources/languagesdataset", encoder, fe, false, false);
+            var split = prepare.trainTestSplit(data, 0.66);
+            datasets.put("Languages folder (text)", new Triple<>(split, encoder, fe));
+        }
+
+        // Get the data
+        Triple<SplitDataset, LabelEncoder, FeatureEncoder> selected = chooseDataset(datasets);
+
+        SplitDataset current = selected.first();
+        LabelEncoder encoder = selected.second();
         int classesAmount = encoder.getClassesAmount();
 
         // Run all tests
@@ -54,16 +69,18 @@ public class Main {
         startUserInput(current, encoder);
     }
 
-    private static SplitDataset chooseDataset(Map<String, SplitDataset> datasets) {
-        Scanner sc = new Scanner(System.in);
+
+    private static Triple<SplitDataset, LabelEncoder, FeatureEncoder> chooseDataset(Map<String, Triple<SplitDataset, LabelEncoder, FeatureEncoder>> datasets) {
+        Scanner scanner = new Scanner(System.in);
         System.out.println("Select dataset:");
-        for (String name : datasets.keySet()) {
-            System.out.println(name);
+        List<String> keys = new ArrayList<>(datasets.keySet());
+        for (int i = 0; i < keys.size(); i++) {
+            System.out.println((i + 1) + ") " + keys.get(i));
         }
         System.out.print("Enter choice number: ");
-        String choice = sc.nextLine().trim();
-        int idx = Math.max(1, Math.min(datasets.size(), Integer.parseInt(choice)));
-        return new ArrayList<>(datasets.values()).get(idx - 1);
+        int choice = Integer.parseInt(scanner.nextLine().trim());
+
+        return datasets.get(keys.get(choice - 1));
     }
 
     private static void divider() {
@@ -158,7 +175,7 @@ public class Main {
     }
 
     private static Classifier chooseClassifier(Scanner sc, int classesAmount) {
-        System.out.println("Select classifier: 1)KNN 2)Percep 3)SLNN 4)Bayes");
+        System.out.println("Select classifier: 1)KNN 2)Perceptron 3)Single-Layer Neuron Network 4)Bayes");
         String c = sc.nextLine().trim();
         return switch (c) {
             case "1" -> {
@@ -197,9 +214,9 @@ public class Main {
             return PrepareDataset.textToVector(sc.nextLine());
         }
         System.out.print("Enter comma vals: ");
-        String[] toks = sc.nextLine().split(",");
-        double[] f = new double[toks.length];
-        for (int i = 0; i < toks.length; i++) f[i] = Double.parseDouble(toks[i].trim());
+        String[] tokens = sc.nextLine().split(",");
+        double[] f = new double[tokens.length];
+        for (int i = 0; i < tokens.length; i++) f[i] = Double.parseDouble(tokens[i].trim());
         return f;
     }
 }
