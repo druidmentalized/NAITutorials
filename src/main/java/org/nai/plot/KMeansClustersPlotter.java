@@ -15,6 +15,8 @@ import java.util.List;
 
 public class KMeansClustersPlotter {
 
+    private KMeansClustersPlotter() {}
+
     public static void plotClusters(List<Cluster> clusters) {
         if (clusters == null || clusters.isEmpty()) {
             System.err.println("No clusters to plot.");

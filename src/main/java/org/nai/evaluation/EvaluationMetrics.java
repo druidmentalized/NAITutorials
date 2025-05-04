@@ -22,7 +22,7 @@ public class EvaluationMetrics {
         this.clusterer = null;
         this.clusteringData = null;
         this.clusteringK = null;
-        this.classifier.train(dataset.getTrainSet());
+        this.classifier.train(dataset.trainSet());
     }
 
     public EvaluationMetrics(Clusterer clusterer, List<Vector> data, int k) {
@@ -37,8 +37,8 @@ public class EvaluationMetrics {
         checkClassifier();
         int correctPredictionsCount = 0;
 
-        List<Vector> testSetVectors = dataset.getTestSet().getVectors();
-        List<Integer> testSetLabels = dataset.getTestSet().getLabels();
+        List<Vector> testSetVectors = dataset.testSet().getVectors();
+        List<Integer> testSetLabels = dataset.testSet().getLabels();
 
         for (int i = 0; i < testSetVectors.size(); i++) {
             int answer = classifier.predict(testSetVectors.get(i));
@@ -55,8 +55,8 @@ public class EvaluationMetrics {
         int truePositives = 0;
         int falsePositives = 0;
 
-        List<Vector> testSetVectors = dataset.getTestSet().getVectors();
-        List<Integer> testSetLabels = dataset.getTestSet().getLabels();
+        List<Vector> testSetVectors = dataset.testSet().getVectors();
+        List<Integer> testSetLabels = dataset.testSet().getLabels();
 
         for (int i = 0; i < testSetVectors.size(); i++) {
 
@@ -67,7 +67,11 @@ public class EvaluationMetrics {
             else if (answer != correctAnswer && positiveClass == correctAnswer) falsePositives++;
         }
 
-        double number = (double) truePositives / (truePositives + falsePositives);
+        int trueFalsePositives = truePositives + falsePositives;
+        double number = 0;
+        if (trueFalsePositives != 0) {
+            number = (double) truePositives / trueFalsePositives;
+        }
         System.out.printf("Evaluated precision is: %.2f%%%n", number * 100);
         return number;
     }
@@ -77,8 +81,8 @@ public class EvaluationMetrics {
         int truePositives = 0;
         int falseNegatives = 0;
 
-        List<Vector> testSetVectors = dataset.getTestSet().getVectors();
-        List<Integer> testSetLabels = dataset.getTestSet().getLabels();
+        List<Vector> testSetVectors = dataset.testSet().getVectors();
+        List<Integer> testSetLabels = dataset.testSet().getLabels();
 
 
         for (int i = 0; i < testSetVectors.size(); i++) {
@@ -90,7 +94,11 @@ public class EvaluationMetrics {
             else if (answer != correctAnswer && positiveClass != correctAnswer) falseNegatives++;
         }
 
-        double number = (double) truePositives / (truePositives + falseNegatives);
+        int truePositivesFalseNegatives = truePositives + falseNegatives;
+        double number = 0;
+        if (truePositivesFalseNegatives != 0) {
+            number = (double) truePositives / truePositivesFalseNegatives;
+        }
         System.out.printf("Evaluated recall is: %.2f%%%n", number * 100);
         return number;
     }

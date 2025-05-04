@@ -62,7 +62,7 @@ public class KMeansClusterer implements Clusterer {
     }
 
     private Cluster findClosestCluster(Vector vector, List<Cluster> clusters) {
-        Cluster best = null;
+        Cluster best = clusters.getFirst();
         double bestDistance = Double.MAX_VALUE;
 
         for (Cluster cluster : clusters) {

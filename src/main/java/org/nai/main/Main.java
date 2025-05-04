@@ -35,7 +35,7 @@ public class Main {
         SplitDataset irisSplit = prepare.trainTestSplit(irisDataset, 0.66);
 
         // Run classifiers on the split data
-        runClassifiersTests(irisSplit, irisEncoder, irisFe);
+        runClassifiersTests(irisSplit, irisEncoder);
         divider();
         // Run clustering on full data
         runClusterersTests(irisDataset);
@@ -46,8 +46,7 @@ public class Main {
     }
 
     private static void runClassifiersTests(SplitDataset splitDataset,
-                                            LabelEncoder encoder,
-                                            FeatureEncoder fe) {
+                                            LabelEncoder encoder) {
         SplitDataset current = splitDataset;
         int classesAmount = encoder.getClassesAmount();
 
@@ -140,7 +139,7 @@ public class Main {
             List<Cluster> clusters = kMeansClusterer.groupClusters(k, vectors);
             double wcss = EvaluationMetrics.computeWCSS(clusters);
 
-            System.out.printf("k = %d → WCSS = %.4f\n", k, wcss);
+            System.out.printf("k = %d → WCSS = %.4f%n", k, wcss);
 
             kToWcss.add(new Pair<>(k, wcss));
 
@@ -155,7 +154,7 @@ public class Main {
             prevWcss = wcss;
         }
 
-        System.out.printf("\nBest clustering found at k = %d with WCSS = %.4f\n", bestK, bestWcss);
+        System.out.printf("%nBest clustering found at k = %d with WCSS = %.4f%n", bestK, bestWcss);
 
         KMeansClustersPlotter.plotWCSS(kToWcss);
 
@@ -176,18 +175,21 @@ public class Main {
 
     private static void startUserInput(SplitDataset split, LabelEncoder encoder) {
         Scanner sc = new Scanner(System.in);
-        while (true) {
+        int inputs = 0;
+        while (inputs < 1000) {
             System.out.println("\nActions: [1] Predict new sample   [2] Exit");
             System.out.print("Choice: ");
             String cmd = sc.nextLine().trim();
             if (cmd.equals("2")) System.exit(0);
             if (cmd.equals("1")) predictFromUserInput(split, sc, encoder);
+
+            inputs++;
         }
     }
 
     private static void predictFromUserInput(SplitDataset split, Scanner sc, LabelEncoder encoder) {
         Classifier classifier = chooseClassifier(sc, encoder.getClassesAmount());
-        classifier.train(split.getTrainSet());
+        classifier.train(split.trainSet());
 
         Vector features = readFeatures(sc);
         int label = classifier.predict(features);

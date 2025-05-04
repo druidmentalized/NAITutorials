@@ -9,11 +9,10 @@ public class LabelEncoder {
     private final Map<Integer, String> indexToLabel = new HashMap<>();
 
     public int encode(String label) {
-        if (!labelToIndex.containsKey(label)) {
-            labelToIndex.put(label, topIndex);
-            indexToLabel.put(topIndex++, label);
-        }
-        return labelToIndex.get(label);
+        return labelToIndex.computeIfAbsent(label, l -> {
+            indexToLabel.put(topIndex, l);
+            return topIndex++;
+        });
     }
 
     public String decode(int index) {

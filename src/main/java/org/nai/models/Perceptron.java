@@ -1,10 +1,7 @@
 package org.nai.models;
 
 import org.nai.data.Dataset;
-import org.nai.structures.Pair;
 import org.nai.structures.Vector;
-
-import java.util.List;
 
 public class Perceptron implements Classifier {
     private Vector weights;
