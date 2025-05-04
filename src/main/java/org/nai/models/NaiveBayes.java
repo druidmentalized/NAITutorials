@@ -1,6 +1,7 @@
 package org.nai.models;
 
-import org.nai.structures.Pair;
+import org.nai.data.Dataset;
+import org.nai.structures.Vector;
 
 import java.util.HashMap;
 import java.util.List;
@@ -20,71 +21,75 @@ public class NaiveBayes implements Classifier {
     }
 
     @Override
-    public void train(List<Pair<Integer, double[]>> trainSet) {
+    public void train(Dataset trainSet) {
         cache.clear();
 
         int entriesAmount = trainSet.size();
         for (int classIndex = 0; classIndex < classesAmount; classIndex++) {
             String className = "Class=" + classIndex;
             int tempClassIndex = classIndex;
-            long classQuantity = trainSet.stream().filter(pair -> pair.first() == tempClassIndex).count();
+            long classQuantity = trainSet.getData().stream().filter(pair -> pair.first() == tempClassIndex).count();
 
-            // Finding priori probabilities
-            {
-                double classPriorProbability = (double) classQuantity / entriesAmount;
-                cache.put(className, classPriorProbability);
-            }
+            findPriori(classQuantity, entriesAmount, className);
+            findPosteriori(trainSet, tempClassIndex, classQuantity, className);
+        }
+    }
 
-            // Finding posteriori probabilities
-            {
-                int columnsAmount = trainSet.getFirst().second().length;
-                for (int columnIndex = 0; columnIndex < columnsAmount; columnIndex++) {
-                    int tempColumnIndex = columnIndex;
-                    Set<Double> distinctValues = trainSet.stream()
-                            .filter(pair -> pair.first() == tempClassIndex)
-                            .map(pair -> pair.second()[tempColumnIndex])
-                            .collect(Collectors.toSet());
+    private void findPriori(long classQuantity, int entriesAmount, String className) {
+        double classPriorProbability = (double) classQuantity / entriesAmount;
+        cache.put(className, classPriorProbability);
+    }
 
-                    for (Double distinctValue : distinctValues) {
-                        long numerator = trainSet.stream()
-                                .filter(pair -> pair.first() == tempClassIndex)
-                                .filter(pair -> pair.second()[tempColumnIndex] == distinctValue)
-                                .count();
+    private void findPosteriori(Dataset trainSet, int tempClassIndex, long classQuantity, String className) {
+        List<org.nai.structures.Pair<Integer, Vector>> classSamples = trainSet.getData().stream()
+                .filter(pair -> pair.first() == tempClassIndex)
+                .toList();
 
-                        double valueProbability;
-                        if (numerator == 0 || applySmoothingAll) {
-                            valueProbability = (double) (numerator + 1) / (classQuantity + distinctValues.size());
-                        }
-                        else {
-                            valueProbability = (double) numerator / (classQuantity);
-                        }
+        int columnsAmount = classSamples.getFirst().second().size();
 
-                        String valueName = "Column=" + tempColumnIndex + ",Value=" + distinctValue + "|" + className;
-                        cache.put(valueName, valueProbability);
-                    }
+        for (int columnIndex = 0; columnIndex < columnsAmount; columnIndex++) {
+            int tempColumnIndex = columnIndex;
+            Set<Double> distinctValues = classSamples.stream()
+                    .map(pair -> pair.second().get(tempColumnIndex))
+                    .collect(Collectors.toSet());
 
+            for (Double distinctValue : distinctValues) {
+                long numerator = classSamples.stream()
+                        .filter(pair -> pair.second().get(tempColumnIndex) == distinctValue)
+                        .count();
+
+                double valueProbability;
+                if (numerator == 0 || applySmoothingAll) {
+                    valueProbability = (double) (numerator + 1) / (classQuantity + distinctValues.size());
                 }
+                else {
+                    valueProbability = (double) numerator / (classQuantity);
+                }
+
+                String valueName = "Column=" + columnIndex + ",Value=" + distinctValue + "|" + className;
+                cache.put(valueName, valueProbability);
             }
+
         }
     }
 
     @Override
-    public int predict(double[] input) {
-        double maxLogProb = Double.NEGATIVE_INFINITY;
+    public int predict(Vector input) {
+        double maxLogProbability = Double.NEGATIVE_INFINITY;
         int bestClass = -1;
 
         for (int classIndex = 0; classIndex < classesAmount; classIndex++) {
             String className = "Class=" + classIndex;
             double logProb = Math.log(cache.get(className));
 
-            for (int col = 0; col < input.length; col++) {
-                String key = "Column=" + col + ",Value=" + input[col] + "|" + className;
+            for (int col = 0; col < input.size(); col++) {
+                String key = "Column=" + col + ",Value=" + input.get(col) + "|" + className;
                 double condProb = cache.getOrDefault(key, 1e-9);
                 logProb += Math.log(condProb);
             }
 
-            if (logProb > maxLogProb) {
-                maxLogProb = logProb;
+            if (logProb > maxLogProbability) {
+                maxLogProbability = logProb;
                 bestClass = classIndex;
             }
         }

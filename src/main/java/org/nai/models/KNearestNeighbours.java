@@ -1,31 +1,35 @@
 package org.nai.models;
 
+import org.nai.data.Dataset;
 import org.nai.structures.Pair;
+import org.nai.structures.Vector;
 
-import java.util.*;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Random;
 
 public class KNearestNeighbours implements Classifier {
-    private List<Pair<Integer, double[]>> trainSet;
+    private final Random random = new Random();
+
+    private Dataset trainSet;
     private int k;
-    private List<Pair<Integer, Double>> distances;
 
     public KNearestNeighbours() {
         k = 3;
     }
 
-    public KNearestNeighbours(int k) {
-        this.k = k;
-    }
-
-    private List<Pair<Integer, Double>> calculateDistances(double[] vector) {
+    private List<Pair<Integer, Double>> calculateDistances(Vector vector) {
         List<Pair<Integer, Double>> distances = new ArrayList<>();
-        for (Pair<Integer, double[]> pair : trainSet) {
-            distances.add(new Pair<>(pair.first(), DistanceUtils.calculateEuclideanDistance(pair.second(), vector)));
+        for (Pair<Integer, Vector> pair : trainSet.getData()) {
+            distances.add(new Pair<>(pair.first(), vector.distanceTo(pair.second())));
         }
         return distances;
     }
 
-    private void sortDistances() {
+    private void sortDistances(List<Pair<Integer, Double>> distances) {
         mergeSort(distances);
     }
 
@@ -42,7 +46,9 @@ public class KNearestNeighbours implements Classifier {
     }
 
     private static <K, V extends Comparable<V>> void merge(List<Pair<K, V>> list, List<Pair<K, V>> left, List<Pair<K, V>> right) {
-        int i = 0, j = 0, y = 0;
+        int i = 0;
+        int j = 0;
+        int y = 0;
 
         while (i < left.size() && j < right.size()) {
             if (left.get(i).second().compareTo(right.get(j).second()) <= 0) {
@@ -59,8 +65,8 @@ public class KNearestNeighbours implements Classifier {
         }
     }
 
-    private int findPredictedClass() {
-        HashMap<Integer, Integer> countMap = new HashMap<>();
+    private int findPredictedClass(List<Pair<Integer, Double>> distances) {
+        Map<Integer, Integer> countMap = new HashMap<>();
         int maxCount = 0;
         List<Integer> mostFrequentClasses = new ArrayList<>();
 
@@ -80,22 +86,22 @@ public class KNearestNeighbours implements Classifier {
         }
 
         if (mostFrequentClasses.size() > 1) {
-            return mostFrequentClasses.get(new Random().nextInt(mostFrequentClasses.size()));
+            return mostFrequentClasses.get(random.nextInt(mostFrequentClasses.size()));
         }
 
         return mostFrequentClasses.getFirst();
     }
 
     @Override
-    public void train(List<Pair<Integer, double[]>> trainSet) {
+    public void train(Dataset trainSet) {
         this.trainSet = trainSet;
     }
 
     @Override
-    public int predict(double[] vector) {
-        distances = calculateDistances(vector);
-        sortDistances();
-        return findPredictedClass();
+    public int predict(Vector vector) {
+        var distances = calculateDistances(vector);
+        sortDistances(distances);
+        return findPredictedClass(distances);
     }
 
     // Helper

@@ -1,6 +1,8 @@
 package org.nai.models;
 
+import org.nai.data.Dataset;
 import org.nai.structures.Pair;
+import org.nai.structures.Vector;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,23 +10,19 @@ import java.util.List;
 public class SingleLayerNeuralNetwork implements Classifier {
 
     private final List<Perceptron> neurons = new ArrayList<>();
-    private double alpha;
-    private double beta;
 
-    public SingleLayerNeuralNetwork(double alpha, double beta, int classes) {
-        this.alpha = alpha;
-        this.beta = beta;
+    public SingleLayerNeuralNetwork(double alpha, int classes) {
         for (int i = 0; i < classes; i++) {
             neurons.add(new Perceptron(alpha));
         }
     }
 
     @Override
-    public void train(List<Pair<Integer, double[]>> trainSet) {
+    public void train(Dataset trainSet) {
         for (int classIndex = 0; classIndex < neurons.size(); classIndex++) {
-            List<Pair<Integer, double[]>> binaryTrainSet = new ArrayList<>();
+            Dataset binaryTrainSet = new Dataset();
 
-            for (Pair<Integer, double[]> sample : trainSet) {
+            for (Pair<Integer, Vector> sample : trainSet.getData()) {
                 int label = sample.first().equals(classIndex) ? 1 : 0;
                 binaryTrainSet.add(new Pair<>(label, sample.second()));
             }
@@ -35,7 +33,7 @@ public class SingleLayerNeuralNetwork implements Classifier {
     }
 
     @Override
-    public int predict(double[] input) {
+    public int predict(Vector input) {
         int bestClass = -1;
         double highestNet = Double.NEGATIVE_INFINITY;
 
@@ -50,9 +48,5 @@ public class SingleLayerNeuralNetwork implements Classifier {
         }
 
         return bestClass;
-    }
-
-    public void setAlpha(double alpha) {
-        this.alpha = alpha;
     }
 }

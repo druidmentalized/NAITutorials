@@ -136,7 +136,7 @@ public class Main {
 
     private static void runSingleLayerNeuralNetworkTests(SplitDataset splitDataset, int classesAmount) {
         System.out.println("Testing of the Single Layer Neural Network algorithm\n");
-        SingleLayerNeuralNetwork singleLayerNeuralNetwork = new SingleLayerNeuralNetwork(0.01, 0.0, classesAmount);
+        SingleLayerNeuralNetwork singleLayerNeuralNetwork = new SingleLayerNeuralNetwork(0.01, classesAmount);
         EvaluationMetrics evaluationMetrics = new EvaluationMetrics(singleLayerNeuralNetwork, splitDataset);
         outputEvaluations(evaluationMetrics, classesAmount);
     }
@@ -203,9 +203,7 @@ public class Main {
             case "3" -> {
                 System.out.print("alpha? ");
                 double a = Double.parseDouble(sc.nextLine().trim());
-                System.out.print("beta?  ");
-                double b = Double.parseDouble(sc.nextLine().trim());
-                yield new SingleLayerNeuralNetwork(a, b, classesAmount);
+                yield new SingleLayerNeuralNetwork(a, classesAmount);
             }
             case "4" -> {
                 System.out.print("smooth all? (y/n): ");

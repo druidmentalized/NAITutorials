@@ -1,11 +1,13 @@
 package org.nai.models;
 
+import org.nai.data.Dataset;
 import org.nai.structures.Pair;
+import org.nai.structures.Vector;
 
 import java.util.List;
 
 public class Perceptron implements Classifier {
-    private double[] weights;
+    private Vector weights;
     private double alpha;
 
     private int epochs;
@@ -16,32 +18,32 @@ public class Perceptron implements Classifier {
     }
 
     @Override
-    public void train(List<Pair<Integer, double[]>> trainSet) {
-        weights = new double[trainSet.getFirst().second().length];
+    public void train(Dataset trainSet) {
+        weights = new Vector(new double[trainSet.getData().getFirst().second().size()]);
+        boolean shouldBreak = false;
         for (; ; epochs++) {
-            int errors = 0;
-            for (Pair<Integer, double[]> pair : trainSet) {
-                if (adjustWeights(pair.second(), pair.first())) errors++;
-            }
+            int errors = (int) trainSet.getData().stream().filter(pair -> adjustWeights(pair.second(), pair.first())).count();
 
             if (errors == 0) {
                 System.out.println("Training complete after " + (epochs + 1) + " epochs.\n");
-                break;
+                shouldBreak = true;
             }
             else if (epochs >= 1000) {
                 System.out.println("Training forcibly stopped after " + (epochs) + " epochs.\n");
-                break;
+                shouldBreak = true;
             }
+
+            if (shouldBreak) break;
         }
     }
 
-    private boolean adjustWeights(double[] vector, double answer) {
+    private boolean adjustWeights(Vector vector, double answer) {
         int prediction = predict(vector);
         double delta = answer - prediction;
 
         if (delta != 0) {
-            for (int i = 0; i < weights.length; i++) {
-                weights[i] += alpha * delta * vector[i];
+            for (int i = 0; i < weights.size(); i++) {
+                weights = weights.add(vector.scale(alpha * delta));
             }
 
             threshold -= delta * alpha;
@@ -52,33 +54,19 @@ public class Perceptron implements Classifier {
     }
 
     @Override
-    public int predict(double[] vector) {
-        return (dotProduct(vector, weights) >= threshold) ? 1 : 0;
+    public int predict(Vector vector) {
+        return (vector.dot(weights) >= threshold) ? 1 : 0;
     }
 
     // Helper
-    public double dotProduct(double[] vec1, double[] vec2) {
-        if (vec1.length != vec2.length) {
-            System.err.println("Can't calculate dot product of different vectors!");
-            return 0;
-        }
 
-        double sum = 0;
-
-        for (int i = 0; i < vec1.length; i++) {
-            sum += vec1[i] * vec2[i];
-        }
-
-        return sum;
-    }
-
-    public double netValue(double[] vec) {
-        return dotProduct(vec, weights) - threshold;
+    public double netValue(Vector vector) {
+        return vector.dot(weights) - threshold;
     }
 
     // Getters & Setters
 
-    public double[] getWeights() {
+    public Vector getWeights() {
         return weights;
     }
     public double getThreshold() {

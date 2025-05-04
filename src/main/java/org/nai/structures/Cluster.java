@@ -17,7 +17,7 @@ public class Cluster {
 
         for (int i = 0; i < dimensions; i++) {
             for (Vector member : members) {
-                vectorArr[i] += member.getData()[i];
+                vectorArr[i] += member.get(i);
             }
             vectorArr[i] /= members.size();
         }

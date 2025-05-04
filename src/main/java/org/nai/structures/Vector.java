@@ -13,6 +13,16 @@ public class Vector {
         return data.length;
     }
 
+    public double get(int index) {
+        checkBounds(index);
+        return data[index];
+    }
+
+    public void set(int index, double value) {
+        checkBounds(index);
+        data[index] = value;
+    }
+
     public double[] getData() {
         return data.clone();
     }
@@ -64,6 +74,12 @@ public class Vector {
     private void checkDimension(Vector other) {
         if (data.length != other.data.length) {
             throw new IllegalArgumentException("Vectors must be the same length");
+        }
+    }
+
+    private void checkBounds(int index) {
+        if (index < 0 || index >= data.length) {
+            throw new IndexOutOfBoundsException("Invalid index: " + index);
         }
     }
 
