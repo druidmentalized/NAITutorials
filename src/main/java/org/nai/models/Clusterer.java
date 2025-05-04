@@ -1,8 +1,10 @@
 package org.nai.models;
 
 import java.util.List;
-import org.nai.structures.Pair;
+
+import org.nai.structures.Cluster;
+import org.nai.structures.Vector;
 
 public interface Clusterer extends Model {
-    List<Pair<double[], List<double[]>>> groupClusters(int k, List<double[]> vectors);
+    List<Cluster> groupClusters(int k, List<Vector> vectors);
 }

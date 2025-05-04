@@ -3,9 +3,9 @@ package org.nai.structures;
 import java.util.Arrays;
 
 public class Centroid {
-    private final double[] coordinates;
+    private final Vector coordinates;
 
-    public Centroid(double[] coordinates) {
+    public Centroid(Vector coordinates) {
         this.coordinates = coordinates;
     }
 
@@ -13,15 +13,15 @@ public class Centroid {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Centroid that)) return false;
-        return Arrays.equals(coordinates, that.coordinates);
+        return Arrays.equals(coordinates.getData(), that.coordinates.getData());
     }
 
     @Override
     public int hashCode() {
-        return Arrays.hashCode(coordinates);
+        return Arrays.hashCode(coordinates.getData());
     }
 
-    public double[] getCoordinates() {
+    public Vector getCoordinates() {
         return coordinates;
     }
 }

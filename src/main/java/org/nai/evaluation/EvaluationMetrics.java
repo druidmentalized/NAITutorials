@@ -2,13 +2,10 @@ package org.nai.evaluation;
 
 import org.nai.data.SplitDataset;
 import org.nai.models.Classifier;
-import org.nai.models.Clusterer;
-import org.nai.structures.Centroid;
-import org.nai.structures.Pair;
-import org.nai.utils.DistanceUtils;
+import org.nai.structures.Cluster;
+import org.nai.structures.Vector;
 
 import java.util.List;
-import java.util.Map;
 
 public class EvaluationMetrics {
     private final Classifier classifier;
@@ -86,14 +83,14 @@ public class EvaluationMetrics {
         return number;
     }
 
-    public static double calculateRSS(Map<Centroid, List<double[]>> clusters) {
-        double rss = 0;
-        for (Map.Entry<Centroid, List<double[]>> entry : clusters.entrySet()) {
-            double[] center = entry.getKey().getCoordinates();
-            for (double[] vec : entry.getValue()) {
-                rss += DistanceUtils.calculateSquaredEuclideanDistance(vec, center);
+    public static double computeWCSS(List<Cluster> clusters) {
+        double wcss = 0;
+        for (Cluster cluster : clusters) {
+            Vector center = cluster.getCentroid().getCoordinates();
+            for (Vector vector : cluster.getMembers()) {
+                wcss += center.squaredDistanceTo(vector);
             }
         }
-        return rss;
+        return wcss;
     }
 }

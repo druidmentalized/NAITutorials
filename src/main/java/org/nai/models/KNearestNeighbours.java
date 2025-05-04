@@ -1,7 +1,6 @@
 package org.nai.models;
 
 import org.nai.structures.Pair;
-import org.nai.utils.DistanceUtils;
 
 import java.util.*;
 

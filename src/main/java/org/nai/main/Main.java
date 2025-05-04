@@ -18,10 +18,10 @@ import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
-        //runClassifiersTests();
+        //runTests();
     }
 
-    private static void runClassifiersTests() {
+    private static void runTests() {
         PrepareDataset prepare = new PrepareDataset();
 
         // Preload all datasets with separate encoders
