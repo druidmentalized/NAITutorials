@@ -1,6 +1,7 @@
 package org.nai.models;
 
 import org.nai.structures.Pair;
+import org.nai.utils.DistanceUtils;
 
 import java.util.*;
 
@@ -20,25 +21,9 @@ public class KNearestNeighbours implements Classifier {
     private List<Pair<Integer, Double>> calculateDistances(double[] vector) {
         List<Pair<Integer, Double>> distances = new ArrayList<>();
         for (Pair<Integer, double[]> pair : trainSet) {
-            distances.add(new Pair<>(pair.first(), calculateEuclideanDistance(pair.second(), vector)));
+            distances.add(new Pair<>(pair.first(), DistanceUtils.calculateEuclideanDistance(pair.second(), vector)));
         }
         return distances;
-    }
-
-    private double calculateEuclideanDistance(double[] vec1, double[] vec2) {
-        double result = 0;
-
-        if (vec1.length != vec2.length) {
-            throw new IllegalArgumentException("Vectors must be the same dimension");
-        }
-
-        for (int i = 0; i < vec1.length; i++) {
-            result += Math.pow((vec1[i] - vec2[i]), 2);
-        }
-
-        result = Math.sqrt(result);
-
-        return result;
     }
 
     private void sortDistances() {

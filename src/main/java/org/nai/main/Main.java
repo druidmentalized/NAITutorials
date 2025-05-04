@@ -13,6 +13,10 @@ import java.util.*;
 
 public class Main {
     public static void main(String[] args) {
+        //runClassifiersTests();
+    }
+
+    private static void runClassifiersTests() {
         PrepareDataset prepare = new PrepareDataset();
 
         // Preload all datasets with separate encoders
@@ -36,7 +40,7 @@ public class Main {
             LabelEncoder encoder = new LabelEncoder();
             FeatureEncoder fe = new FeatureEncoder();
             var train = prepare.parseDataset("src/main/resources/csv/lang.train.csv", encoder, fe, true, false);
-            var test  = prepare.parseDataset("src/main/resources/csv/lang.test.csv", encoder, fe, true, false);
+            var test = prepare.parseDataset("src/main/resources/csv/lang.test.csv", encoder, fe, true, false);
             var split = new SplitDataset(train, test);
             datasets.put("Language CSVs (text)", new Triple<>(split, encoder, fe));
         }
@@ -56,7 +60,7 @@ public class Main {
         int classesAmount = encoder.getClassesAmount();
 
         // Run all tests
-        //runKNNTests(current);
+        runKNNTests(current);
         divider();
         runPerceptronTests(current, classesAmount);
         divider();
@@ -65,10 +69,11 @@ public class Main {
         runNaiveBayesTests(current, classesAmount);
         divider();
 
+        divider();
+
         // Interactive prediction loop
         startUserInput(current, encoder);
     }
-
 
     private static Triple<SplitDataset, LabelEncoder, FeatureEncoder> chooseDataset(Map<String, Triple<SplitDataset, LabelEncoder, FeatureEncoder>> datasets) {
         Scanner scanner = new Scanner(System.in);
@@ -181,7 +186,8 @@ public class Main {
             case "1" -> {
                 System.out.print("k? ");
                 int k = Integer.parseInt(sc.nextLine().trim());
-                KNearestNeighbours kNN = new KNearestNeighbours(); kNN.setK(k);
+                KNearestNeighbours kNN = new KNearestNeighbours();
+                kNN.setK(k);
                 yield kNN;
             }
             case "2" -> {
@@ -190,8 +196,10 @@ public class Main {
                 yield new Perceptron(a);
             }
             case "3" -> {
-                System.out.print("alpha? "); double a = Double.parseDouble(sc.nextLine().trim());
-                System.out.print("beta?  "); double b = Double.parseDouble(sc.nextLine().trim());
+                System.out.print("alpha? ");
+                double a = Double.parseDouble(sc.nextLine().trim());
+                System.out.print("beta?  ");
+                double b = Double.parseDouble(sc.nextLine().trim());
                 yield new SingleLayerNeuralNetwork(a, b, classesAmount);
             }
             case "4" -> {
@@ -201,7 +209,8 @@ public class Main {
             }
             default -> {
                 System.err.println("Invalid, using KNN(k=3)");
-                KNearestNeighbours def = new KNearestNeighbours(); def.setK(3);
+                KNearestNeighbours def = new KNearestNeighbours();
+                def.setK(3);
                 yield def;
             }
         };
