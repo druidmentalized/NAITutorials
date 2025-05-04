@@ -1,37 +1,25 @@
 package org.nai.data;
 
 import org.nai.structures.Pair;
+import org.nai.structures.Vector;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class SplitDataset {
-    private final List<Pair<Integer, double[]>> trainSet;
-    private final List<Pair<Integer, double[]>> testSet;
+    private final Dataset trainSet;
+    private final Dataset testSet;
 
-    public SplitDataset() {
-        trainSet = new ArrayList<>();
-        testSet = new ArrayList<>();
-    }
-
-    public SplitDataset(List<Pair<Integer, double[]>> trainSet, List<Pair<Integer, double[]>> testSet) {
+    public SplitDataset(Dataset trainSet, Dataset testSet) {
         this.trainSet = trainSet;
         this.testSet = testSet;
     }
 
-    public List<Pair<Integer, double[]>> getTrainSet() {
+    public Dataset getTrainSet() {
         return trainSet;
     }
-    public List<Pair<Integer, double[]>> getTestSet() {
+    public Dataset getTestSet() {
         return testSet;
-    }
-
-    public List<double[]> getTestSetVectors() {
-        return testSet.stream().map(Pair::second).collect(Collectors.toList());
-    }
-
-    public List<Integer> getTestSetLabels() {
-        return testSet.stream().map(Pair::first).collect(Collectors.toList());
     }
 }

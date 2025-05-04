@@ -17,15 +17,27 @@ public class Dataset {
         this.data = data;
     }
 
-    public List<Pair<Integer, Vector>> getData() {
-        return data;
-    }
-
     public void add(Pair<Integer, Vector> pair) {
         data.add(pair);
     }
 
+    public void addAll(List<Pair<Integer, Vector>> entries) {
+        data.addAll(entries);
+    }
+
     public int size() {
         return data.size();
+    }
+
+    public List<Pair<Integer, Vector>> getData() {
+        return data;
+    }
+
+    public List<Integer> getLabels() {
+        return data.stream().map((Pair::first)).toList();
+    }
+
+    public List<Vector> getVectors() {
+        return data.stream().map((Pair::second)).toList();
     }
 }

@@ -1,18 +1,21 @@
 package org.nai.data;
 
 import org.nai.exceptions.NoFoldersFoundException;
+import org.nai.exceptions.UnsupportedFileFormatException;
 import org.nai.structures.Pair;
+import org.nai.structures.Vector;
 import org.nai.utils.FeatureEncoder;
 import org.nai.utils.LabelEncoder;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.*;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Collections;
 
 public class PrepareDataset {
-    public List<Pair<Integer, double[]>> parseDataset(
+    public Dataset parseDataset(
             String path,
             LabelEncoder encoder,
             FeatureEncoder featureEncoder,
@@ -30,7 +33,7 @@ public class PrepareDataset {
             if (file.isDirectory()) {
                 return parseTextDataset(path, encoder);
             } else {
-                throw new IllegalArgumentException("Unsupported file format: " + path);
+                throw new UnsupportedFileFormatException("Unsupported file format: " + path);
             }
         }
     }
@@ -38,15 +41,15 @@ public class PrepareDataset {
     // ─────────────────────────────────────────────────────────────────────
     //                    Numeric OR Categorical CSV parser
     // ─────────────────────────────────────────────────────────────────────
-    private List<Pair<Integer, double[]>> parseCSV(
+    private Dataset parseCSV(
             String filePath,
             LabelEncoder labelEncoder,
             FeatureEncoder featureEncoder,
             boolean encodeFeatures
     ) {
-        List<Pair<Integer, double[]>> dataset = new ArrayList<>();
+        Dataset dataset = new Dataset();
 
-        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(filePath), StandardCharsets.UTF_8))) {
             String line;
             while ((line = br.readLine()) != null) {
                 String[] tokens = line.split(",");
@@ -54,17 +57,17 @@ public class PrepareDataset {
 
                 int encodedLabel = labelEncoder.encode(tokens[lastIndex].trim());
 
-                double[] vector = new double[lastIndex];
+                double[] vectorArr = new double[lastIndex];
                 for (int i = 0; i < lastIndex; i++) {
                     String tok = tokens[i].trim();
                     if (encodeFeatures) {
-                        vector[i] = featureEncoder.encode(i, tok);
+                        vectorArr[i] = featureEncoder.encode(i, tok);
                     } else {
-                        vector[i] = Double.parseDouble(tok);
+                        vectorArr[i] = Double.parseDouble(tok);
                     }
                 }
 
-                dataset.add(new Pair<>(encodedLabel, vector));
+                dataset.add(new Pair<>(encodedLabel, new Vector(vectorArr)));
             }
         } catch (IOException e) {
             System.err.println("Reading data went wrong: " + e.getMessage());
@@ -76,18 +79,19 @@ public class PrepareDataset {
     // ─────────────────────────────────────────────────────────────────────
     //                     Text‐only CSV parser (Label, "Long text…")
     // ─────────────────────────────────────────────────────────────────────
-    private List<Pair<Integer, double[]>> parseTextCSV(
+    private Dataset parseTextCSV(
             String filePath,
             LabelEncoder encoder
     ) {
-        List<Pair<Integer, double[]>> dataset = new ArrayList<>();
+        Dataset dataset = new Dataset();
 
         try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
             String line;
+            int lineNumber = 1;
             while ((line = br.readLine()) != null) {
                 String[] parts = line.split(",", 2);
                 if (parts.length != 2) {
-                    System.err.println("Skipping invalid line: " + line);
+                    System.err.printf("Line %d in %s is invalid CSV format: '%s'%n", lineNumber, filePath, line);
                     continue;
                 }
                 String labelStr = parts[0].trim();
@@ -96,8 +100,9 @@ public class PrepareDataset {
                     textRaw = textRaw.substring(1, textRaw.length() - 1);
                 }
                 int lbl = encoder.encode(labelStr);
-                double[] vec = textToVector(textRaw);
+                Vector vec = textToVector(textRaw);
                 dataset.add(new Pair<>(lbl, vec));
+                lineNumber++;
             }
         } catch (IOException e) {
             System.err.println("Reading data went wrong: " + e.getMessage());
@@ -109,70 +114,90 @@ public class PrepareDataset {
     // ─────────────────────────────────────────────────────────────────────
     //                Directory‐of‐.txt‐files parser by subfolder
     // ─────────────────────────────────────────────────────────────────────
-    private List<Pair<Integer, double[]>> parseTextDataset(
+    private Dataset parseTextDataset(
             String path,
             LabelEncoder encoder
     ) {
-        List<Pair<Integer, double[]>> dataset = new ArrayList<>();
+        Dataset dataset = new Dataset();
         File mainDir = new File(path);
         File[] folders = mainDir.listFiles(File::isDirectory);
-        if (folders == null) throw new NoFoldersFoundException(path);
+        if (folders == null || folders.length == 0) throw new NoFoldersFoundException(path);
 
         for (File langDir : folders) {
-            int lbl = encoder.encode(langDir.getName());
-            File[] files = langDir.listFiles((_, n) -> n.endsWith(".txt"));
-            if (files == null) continue;
-            for (File f : files) {
-                try (BufferedReader br = new BufferedReader(new FileReader(f))) {
-                    StringBuilder sb = new StringBuilder();
-                    String l;
-                    while ((l = br.readLine()) != null) {
-                        if (!l.isEmpty()) sb.append(l).append(' ');
-                    }
-                    dataset.add(new Pair<>(lbl, textToVector(sb.toString())));
-                } catch (IOException ex) {
-                    System.err.println("Error reading " + f.getName() + ": " + ex.getMessage());
-                }
-            }
+            processTextFolder(langDir, encoder, dataset);
         }
 
         return dataset;
     }
 
+    private void processTextFolder(File folder, LabelEncoder encoder, Dataset dataset) {
+        int lbl = encoder.encode(folder.getName());
+        File[] files = folder.listFiles((_, n) -> n.endsWith(".txt"));
+        if (files == null) return;
+        for (File file : files) {
+            String content = readFileContent(file);
+            if (!content.isEmpty()) {
+                dataset.add(new Pair<>(lbl, textToVector(content)));
+            }
+        }
+    }
+
+    private String readFileContent(File file) {
+        StringBuilder sb = new StringBuilder();
+        try (BufferedReader br = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = br.readLine()) != null) {
+                if (!line.isEmpty()) sb.append(line).append(' ');
+            }
+        } catch (IOException ex) {
+            System.err.println("Error reading " + file.getName() + ": " + ex.getMessage());
+        }
+        return sb.toString();
+    }
+
     // ─────────────────────────────────────────────────────────────────────
     //                      Stratified train/test split
     // ─────────────────────────────────────────────────────────────────────
-    public SplitDataset trainTestSplit(List<Pair<Integer, double[]>> data, double trainRatio) {
-        List<Pair<Integer,double[]>> train = new ArrayList<>();
-        List<Pair<Integer,double[]>> test  = new ArrayList<>();
+    public SplitDataset trainTestSplit(Dataset wholeDataset, double trainRatio) {
+        Dataset trainSet = new Dataset();
+        Dataset testSet = new Dataset();
 
-        Map<Integer,List<Pair<Integer,double[]>>> byClass = new HashMap<>();
-        for (Pair<Integer,double[]> p : data) {
-            byClass.computeIfAbsent(p.first(), _ -> new ArrayList<>()).add(p);
+        Map<Integer, Dataset> byClass = new HashMap<>();
+        for (Pair<Integer, Vector> p : wholeDataset.getData()) {
+            byClass.computeIfAbsent(p.first(), _ -> new Dataset()).add(p);
         }
 
-        for (List<Pair<Integer,double[]>> bucket : byClass.values()) {
-            Collections.shuffle(bucket);
-            int cut = Math.max(1, (int)Math.round(bucket.size() * trainRatio));
-            train.addAll(bucket.subList(0, cut));
-            test .addAll(bucket.subList(cut, bucket.size()));
+        for (Dataset bucket : byClass.values()) {
+            List<Pair<Integer, Vector>> data = bucket.getData();
+            Collections.shuffle(data);
+            int cut = Math.max(1, (int) Math.round(data.size() * trainRatio));
+
+            trainSet.addAll(data.subList(0, cut));
+            testSet.addAll(data.subList(cut, data.size()));
         }
-        return new SplitDataset(train, test);
+        return new SplitDataset(trainSet, testSet);
     }
 
     // ─────────────────────────────────────────────────────────────────────
     //                         Text → 26‐dim letter‐freq vector
     // ─────────────────────────────────────────────────────────────────────
-    public static double[] textToVector(String text) {
-        double[] vec = new double[26];
+    public static Vector textToVector(String text) {
+        double[] data = new double[26];
         text = text.toLowerCase().replaceAll("[^a-z]", "");
+
         for (char c : text.toCharArray()) {
-            vec[c - 'a']++;
+            if (c >= 'a' && c <= 'z') {
+                data[c - 'a']++;
+            }
         }
+
         double len = text.length();
-        for (int i = 0; i < 26; i++) {
-            vec[i] /= len;
+        if (len > 0) {
+            for (int i = 0; i < 26; i++) {
+                data[i] /= len;
+            }
         }
-        return vec;
+
+        return new Vector(data);
     }
 }

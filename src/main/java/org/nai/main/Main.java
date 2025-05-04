@@ -6,10 +6,15 @@ import org.nai.evaluation.EvaluationMetrics;
 import org.nai.models.*;
 import org.nai.plot.DecisionBoundaryPlotter;
 import org.nai.structures.Triple;
+import org.nai.structures.Vector;
 import org.nai.utils.FeatureEncoder;
 import org.nai.utils.LabelEncoder;
 
-import java.util.*;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.LinkedHashMap;
+import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
@@ -216,7 +221,7 @@ public class Main {
         };
     }
 
-    private static double[] readFeatures(Scanner sc) {
+    private static Vector readFeatures(Scanner sc) {
         System.out.print("Input type: 1)numeric 2)text: ");
         if (sc.nextLine().trim().equals("2")) {
             System.out.print("Enter text: ");
@@ -226,6 +231,6 @@ public class Main {
         String[] tokens = sc.nextLine().split(",");
         double[] f = new double[tokens.length];
         for (int i = 0; i < tokens.length; i++) f[i] = Double.parseDouble(tokens[i].trim());
-        return f;
+        return new Vector(f);
     }
 }
