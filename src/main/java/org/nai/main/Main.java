@@ -35,7 +35,7 @@ public class Main {
         SplitDataset irisSplit = prepare.trainTestSplit(irisDataset, 0.66);
 
         // Run classifiers on the split data
-//        runClassifiersTests(irisSplit, irisEncoder, irisFe);
+        runClassifiersTests(irisSplit, irisEncoder, irisFe);
         divider();
         // Run clustering on full data
         runClusterersTests(irisDataset);
@@ -157,10 +157,8 @@ public class Main {
 
         System.out.printf("\nBest clustering found at k = %d with WCSS = %.4f\n", bestK, bestWcss);
 
-        // Plot WCSS vs k
         KMeansClustersPlotter.plotWCSS(kToWcss);
 
-        // Plot best clustering result
         if (bestClusters != null) {
             KMeansClustersPlotter.plotClusters(bestClusters);
         }
@@ -182,7 +180,7 @@ public class Main {
             System.out.println("\nActions: [1] Predict new sample   [2] Exit");
             System.out.print("Choice: ");
             String cmd = sc.nextLine().trim();
-            if (cmd.equals("2")) break;
+            if (cmd.equals("2")) System.exit(0);
             if (cmd.equals("1")) predictFromUserInput(split, sc, encoder);
         }
     }
