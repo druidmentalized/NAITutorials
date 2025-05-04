@@ -30,7 +30,9 @@ public class KMeansClusterer implements Clusterer {
     }
 
     private List<Cluster> initClusters(List<Vector> vectors) {
-        Collections.shuffle(vectors);
+        List<Vector> shuffled = new ArrayList<>(vectors);  // mutable copy
+        Collections.shuffle(shuffled);
+
         List<Cluster> clusters = new ArrayList<>();
 
         for (int i = 0; i < k; i++) {

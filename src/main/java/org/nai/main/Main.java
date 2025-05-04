@@ -8,10 +8,12 @@ import org.nai.models.*;
 import org.nai.models.KMeansClusterer;
 import org.nai.plot.KMeansClustersPlotter;
 import org.nai.structures.Cluster;
+import org.nai.structures.Pair;
 import org.nai.structures.Vector;
 import org.nai.utils.FeatureEncoder;
 import org.nai.utils.LabelEncoder;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
@@ -33,7 +35,7 @@ public class Main {
         SplitDataset irisSplit = prepare.trainTestSplit(irisDataset, 0.66);
 
         // Run classifiers on the split data
-        runClassifiersTests(irisSplit, irisEncoder, irisFe);
+//        runClassifiersTests(irisSplit, irisEncoder, irisFe);
         divider();
         // Run clustering on full data
         runClusterersTests(irisDataset);
@@ -126,25 +128,39 @@ public class Main {
 
         KMeansClusterer kMeansClusterer = new KMeansClusterer();
 
-        double bestWcss = Double.MAX_VALUE;
+        double bestWcss = 0;
+        double bestWcssDiff = Double.MIN_VALUE;
+        double prevWcss = Double.MIN_VALUE;
         List<Cluster> bestClusters = null;
         int bestK = 2;
 
-        for (int k = 2; k <= 6; k++) {
+        List<Pair<Integer, Double>> kToWcss = new ArrayList<>();
+
+        for (int k = 2; k <= 15; k++) {
             List<Cluster> clusters = kMeansClusterer.groupClusters(k, vectors);
             double wcss = EvaluationMetrics.computeWCSS(clusters);
 
             System.out.printf("k = %d → WCSS = %.4f\n", k, wcss);
 
-            if (wcss < bestWcss) {
-                bestWcss = wcss;
+            kToWcss.add(new Pair<>(k, wcss));
+
+            double wcssDiff = prevWcss - wcss;
+            if (wcssDiff > bestWcssDiff) {
+                bestWcssDiff = wcssDiff;
                 bestClusters = clusters;
+                bestWcss = wcss;
                 bestK = k;
             }
+
+            prevWcss = wcss;
         }
 
-        System.out.println("\nBest clustering found at k = " + bestK + ", WCSS = " + bestWcss);
+        System.out.printf("\nBest clustering found at k = %d with WCSS = %.4f\n", bestK, bestWcss);
 
+        // Plot WCSS vs k
+        KMeansClustersPlotter.plotWCSS(kToWcss);
+
+        // Plot best clustering result
         if (bestClusters != null) {
             KMeansClustersPlotter.plotClusters(bestClusters);
         }

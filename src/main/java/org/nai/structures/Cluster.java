@@ -12,6 +12,8 @@ public class Cluster {
     }
 
     public void recalculateCentroid() {
+        if (members.isEmpty()) return;
+
         int dimensions = members.getFirst().size();
         double[] vectorArr = new double[dimensions];
 
