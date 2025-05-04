@@ -2,66 +2,51 @@ package org.nai.main;
 
 import org.nai.data.PrepareDataset;
 import org.nai.data.SplitDataset;
+import org.nai.data.Dataset;
 import org.nai.evaluation.EvaluationMetrics;
 import org.nai.models.*;
-import org.nai.plot.DecisionBoundaryPlotter;
-import org.nai.structures.Triple;
+import org.nai.models.KMeansClusterer;
+import org.nai.plot.KMeansClustersPlotter;
+import org.nai.structures.Cluster;
 import org.nai.structures.Vector;
 import org.nai.utils.FeatureEncoder;
 import org.nai.utils.LabelEncoder;
 
 import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.LinkedHashMap;
 import java.util.Scanner;
 
 public class Main {
     public static void main(String[] args) {
-        //runTests();
+        runTests();
     }
 
     private static void runTests() {
         PrepareDataset prepare = new PrepareDataset();
 
-        // Preload all datasets with separate encoders
-        Map<String, Triple<SplitDataset, LabelEncoder, FeatureEncoder>> datasets = new LinkedHashMap<>();
+        LabelEncoder irisEncoder = new LabelEncoder();
+        FeatureEncoder irisFe = new FeatureEncoder();
+        Dataset irisDataset = prepare.parseDataset(
+            "src/main/resources/csv/iris.csv",
+            irisEncoder, irisFe,
+            false, false
+        );
+        SplitDataset irisSplit = prepare.trainTestSplit(irisDataset, 0.66);
 
-        {
-            LabelEncoder encoder = new LabelEncoder();
-            FeatureEncoder fe = new FeatureEncoder();
-            var data = prepare.parseDataset("src/main/resources/csv/iris.csv", encoder, fe, false, false);
-            var split = prepare.trainTestSplit(data, 0.66);
-            datasets.put("Iris (numeric)", new Triple<>(split, encoder, fe));
-        }
-        {
-            LabelEncoder encoder = new LabelEncoder();
-            FeatureEncoder fe = new FeatureEncoder();
-            var data = prepare.parseDataset("src/main/resources/csv/outGame.csv", encoder, fe, false, true);
-            var split = prepare.trainTestSplit(data, 0.86);
-            datasets.put("outGame (categorical)", new Triple<>(split, encoder, fe));
-        }
-        {
-            LabelEncoder encoder = new LabelEncoder();
-            FeatureEncoder fe = new FeatureEncoder();
-            var train = prepare.parseDataset("src/main/resources/csv/lang.train.csv", encoder, fe, true, false);
-            var test = prepare.parseDataset("src/main/resources/csv/lang.test.csv", encoder, fe, true, false);
-            var split = new SplitDataset(train, test);
-            datasets.put("Language CSVs (text)", new Triple<>(split, encoder, fe));
-        }
-        {
-            LabelEncoder encoder = new LabelEncoder();
-            FeatureEncoder fe = new FeatureEncoder();
-            var data = prepare.parseDataset("src/main/resources/languagesdataset", encoder, fe, false, false);
-            var split = prepare.trainTestSplit(data, 0.66);
-            datasets.put("Languages folder (text)", new Triple<>(split, encoder, fe));
-        }
+        // Run classifiers on the split data
+        runClassifiersTests(irisSplit, irisEncoder, irisFe);
+        divider();
+        // Run clustering on full data
+        runClusterersTests(irisDataset);
+        divider();
 
-        // Get the data
-        Triple<SplitDataset, LabelEncoder, FeatureEncoder> selected = chooseDataset(datasets);
+        // Start interactive input on the split data
+        startUserInput(irisSplit, irisEncoder);
+    }
 
-        SplitDataset current = selected.first();
-        LabelEncoder encoder = selected.second();
+    private static void runClassifiersTests(SplitDataset splitDataset,
+                                            LabelEncoder encoder,
+                                            FeatureEncoder fe) {
+        SplitDataset current = splitDataset;
         int classesAmount = encoder.getClassesAmount();
 
         // Run all tests
@@ -73,24 +58,12 @@ public class Main {
         divider();
         runNaiveBayesTests(current, classesAmount);
         divider();
-
-        divider();
-
-        // Interactive prediction loop
-        startUserInput(current, encoder);
     }
 
-    private static Triple<SplitDataset, LabelEncoder, FeatureEncoder> chooseDataset(Map<String, Triple<SplitDataset, LabelEncoder, FeatureEncoder>> datasets) {
-        Scanner scanner = new Scanner(System.in);
-        System.out.println("Select dataset:");
-        List<String> keys = new ArrayList<>(datasets.keySet());
-        for (int i = 0; i < keys.size(); i++) {
-            System.out.println((i + 1) + ") " + keys.get(i));
-        }
-        System.out.print("Enter choice number: ");
-        int choice = Integer.parseInt(scanner.nextLine().trim());
+    private static void runClusterersTests(Dataset dataset) {
+        List<Vector> vectors = dataset.getVectors();
 
-        return datasets.get(keys.get(choice - 1));
+        runKMeansClustererTests(vectors);
     }
 
     private static void divider() {
@@ -131,24 +104,53 @@ public class Main {
         System.out.println("Testing of the Perceptron algorithm\n");
         Perceptron perceptron = new Perceptron(0.2);
         EvaluationMetrics evaluationMetrics = new EvaluationMetrics(perceptron, splitDataset);
-        outputEvaluations(evaluationMetrics, classesAmount);
+        outputClassifierEvaluations(evaluationMetrics, classesAmount);
     }
 
     private static void runSingleLayerNeuralNetworkTests(SplitDataset splitDataset, int classesAmount) {
         System.out.println("Testing of the Single Layer Neural Network algorithm\n");
         SingleLayerNeuralNetwork singleLayerNeuralNetwork = new SingleLayerNeuralNetwork(0.01, classesAmount);
         EvaluationMetrics evaluationMetrics = new EvaluationMetrics(singleLayerNeuralNetwork, splitDataset);
-        outputEvaluations(evaluationMetrics, classesAmount);
+        outputClassifierEvaluations(evaluationMetrics, classesAmount);
     }
 
     private static void runNaiveBayesTests(SplitDataset splitDataset, int classesAmount) {
         System.out.println("Testing of the Naive Bayes Network algorithm\n");
         NaiveBayes naiveBayes = new NaiveBayes(classesAmount, true);
         EvaluationMetrics evaluationMetrics = new EvaluationMetrics(naiveBayes, splitDataset);
-        outputEvaluations(evaluationMetrics, classesAmount);
+        outputClassifierEvaluations(evaluationMetrics, classesAmount);
     }
 
-    private static void outputEvaluations(EvaluationMetrics evaluationMetrics, int classesAmount) {
+    private static void runKMeansClustererTests(List<Vector> vectors) {
+        System.out.println("Testing of the K-Means Clustering algorithm\n");
+
+        KMeansClusterer kMeansClusterer = new KMeansClusterer();
+
+        double bestWcss = Double.MAX_VALUE;
+        List<Cluster> bestClusters = null;
+        int bestK = 2;
+
+        for (int k = 2; k <= 6; k++) {
+            List<Cluster> clusters = kMeansClusterer.groupClusters(k, vectors);
+            double wcss = EvaluationMetrics.computeWCSS(clusters);
+
+            System.out.printf("k = %d → WCSS = %.4f\n", k, wcss);
+
+            if (wcss < bestWcss) {
+                bestWcss = wcss;
+                bestClusters = clusters;
+                bestK = k;
+            }
+        }
+
+        System.out.println("\nBest clustering found at k = " + bestK + ", WCSS = " + bestWcss);
+
+        if (bestClusters != null) {
+            KMeansClustersPlotter.plotClusters(bestClusters);
+        }
+    }
+
+    private static void outputClassifierEvaluations(EvaluationMetrics evaluationMetrics, int classesAmount) {
         evaluationMetrics.measureAccuracy();
         for (int i = 0; i < classesAmount; i++) {
             System.out.println("\nClass " + i + " measuring:");
@@ -170,18 +172,12 @@ public class Main {
     }
 
     private static void predictFromUserInput(SplitDataset split, Scanner sc, LabelEncoder encoder) {
-        Classifier clf = chooseClassifier(sc, encoder.getClassesAmount());
-        clf.train(split.getTrainSet());
+        Classifier classifier = chooseClassifier(sc, encoder.getClassesAmount());
+        classifier.train(split.getTrainSet());
 
-        double[] features = readFeatures(sc);
-        int label = clf.predict(features);
+        Vector features = readFeatures(sc);
+        int label = classifier.predict(features);
         System.out.println("Predicted index: " + label + ", label: " + encoder.decode(label));
-
-        if (clf instanceof Perceptron p) {
-            DecisionBoundaryPlotter plot = new DecisionBoundaryPlotter(p, 0, 10, 50);
-            plot.asciiPlot(split.getTestSet());
-            plot.exportBoundaryToCsv("src/main/resources/boundary.csv");
-        }
     }
 
     private static Classifier chooseClassifier(Scanner sc, int classesAmount) {
