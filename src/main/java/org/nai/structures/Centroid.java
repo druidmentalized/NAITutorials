@@ -2,26 +2,17 @@ package org.nai.structures;
 
 import java.util.Arrays;
 
-public class Centroid {
-    private final Vector coordinates;
-
-    public Centroid(Vector coordinates) {
-        this.coordinates = coordinates;
-    }
+public record Centroid(Vector coordinates) {
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Centroid that)) return false;
-        return Arrays.equals(coordinates.getData(), that.coordinates.getData());
+        if (!(o instanceof Centroid(Vector coordinates1))) return false;
+        return Arrays.equals(coordinates.data(), coordinates1.data());
     }
 
     @Override
     public int hashCode() {
-        return Arrays.hashCode(coordinates.getData());
-    }
-
-    public Vector getCoordinates() {
-        return coordinates;
+        return Arrays.hashCode(coordinates.data());
     }
 }

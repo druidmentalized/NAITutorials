@@ -66,7 +66,7 @@ public class KMeansClusterer implements Clusterer {
         double bestDistance = Double.MAX_VALUE;
 
         for (Cluster cluster : clusters) {
-            double distance = vector.squaredDistanceTo(cluster.getCentroid().getCoordinates());
+            double distance = vector.squaredDistanceTo(cluster.getCentroid().coordinates());
             if (distance < bestDistance) {
                 best = cluster;
                 bestDistance = distance;

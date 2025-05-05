@@ -2,9 +2,7 @@ package org.nai.structures;
 
 import java.util.Arrays;
 
-public class Vector {
-    private final double[] data;
-
+public record Vector(double[] data) {
     public Vector(double[] data) {
         this.data = data.clone();
     }
@@ -23,7 +21,8 @@ public class Vector {
         data[index] = value;
     }
 
-    public double[] getData() {
+    @Override
+    public double[] data() {
         return data.clone();
     }
 

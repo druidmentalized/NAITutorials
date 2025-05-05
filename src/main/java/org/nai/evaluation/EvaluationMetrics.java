@@ -121,7 +121,7 @@ public class EvaluationMetrics {
     public static double computeWCSS(List<Cluster> clusters) {
         double wcss = 0;
         for (Cluster cluster : clusters) {
-            Vector center = cluster.getCentroid().getCoordinates();
+            Vector center = cluster.getCentroid().coordinates();
             for (Vector vector : cluster.getMembers()) {
                 wcss += center.squaredDistanceTo(vector);
             }

@@ -23,7 +23,7 @@ public class KMeansClustersPlotter {
             return;
         }
 
-        int dims = clusters.get(0).getCentroid().getCoordinates().size();
+        int dims = clusters.get(0).getCentroid().coordinates().size();
         List<XYChart> charts = new ArrayList<>();
 
         for (int i = 0; i < dims; i++) {
@@ -51,7 +51,7 @@ public class KMeansClustersPlotter {
                             .setLineStyle(SeriesLines.NONE);
 
                     // Plot centroid in black
-                    Vector cent = cluster.getCentroid().getCoordinates();
+                    Vector cent = cluster.getCentroid().coordinates();
                     double[] cx = { cent.get(i) };
                     double[] cy = { cent.get(j) };
                     chart.addSeries("Centroid " + c, cx, cy)
