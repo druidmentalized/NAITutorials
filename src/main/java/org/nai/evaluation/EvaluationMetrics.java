@@ -110,14 +110,6 @@ public class EvaluationMetrics {
         return number;
     }
 
-    public double evaluateWCSS() {
-        checkClusterer();
-        List<Cluster> clusters = clusterer.groupClusters(clusteringK, clusteringData);
-        double wcss = computeWCSS(clusters);
-        System.out.printf("Computed WCSS: %.4f%n", wcss);
-        return wcss;
-    }
-
     public static double computeWCSS(List<Cluster> clusters) {
         double wcss = 0;
         for (Cluster cluster : clusters) {
