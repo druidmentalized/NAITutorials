@@ -23,7 +23,7 @@ public class KMeansClustersPlotter {
             return;
         }
 
-        int dims = clusters.get(0).getCentroid().coordinates().size();
+        int dims = clusters.getFirst().getCentroid().coordinates().size();
         List<XYChart> charts = new ArrayList<>();
 
         for (int i = 0; i < dims; i++) {
