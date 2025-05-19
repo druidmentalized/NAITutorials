@@ -1,5 +1,6 @@
 package org.nai.main;
 
+import org.nai.algorithms.Knapsack;
 import org.nai.data.PrepareDataset;
 import org.nai.data.SplitDataset;
 import org.nai.data.Dataset;
@@ -35,10 +36,13 @@ public class Main {
         SplitDataset irisSplit = prepare.trainTestSplit(irisDataset, 0.66);
 
         // Run classifiers on the split data
-        runClassifiersTests(irisSplit, irisEncoder);
+// *       runClassifiersTests(irisSplit, irisEncoder);
         divider();
         // Run clustering on full data
-        runClusterersTests(irisDataset);
+// *      runClusterersTests(irisDataset);
+        divider();
+        // Run Algorithms on Vectors
+        runAlgorithmsTests(irisDataset.getVectors());
         divider();
 
         // Start interactive input on the split data
@@ -65,6 +69,13 @@ public class Main {
         List<Vector> vectors = dataset.getVectors();
 
         runKMeansClustererTests(vectors);
+    }
+
+    private static void runAlgorithmsTests(List<Vector> inputVectors) {
+        Vector itemWeights = new Vector(new double[]{8, 10, 3, 5, 2});
+        Vector itemValues = new Vector(new double[]{10, 12, 5, 6, 2});
+        double capacity = 10;
+        runKnapsackTests(itemWeights, itemValues, capacity);
     }
 
     private static void divider() {
@@ -120,6 +131,31 @@ public class Main {
         NaiveBayes naiveBayes = new NaiveBayes(classesAmount, true);
         EvaluationMetrics evaluationMetrics = new EvaluationMetrics(naiveBayes, splitDataset);
         outputClassifierEvaluations(evaluationMetrics, classesAmount);
+    }
+
+    private static void runKnapsackTests(Vector itemWeights, Vector itemValues, double capacity) {
+        Knapsack knap = new Knapsack(itemWeights, itemValues, capacity);
+
+        // Brute-force timing
+        long startBrute = System.nanoTime();
+        Pair<List<Vector>, Double> bruteRes = knap.bruteForce();
+        long timeBrute = System.nanoTime() - startBrute;
+
+        // Greedy timing
+        long startGreedy = System.nanoTime();
+        Pair<Vector, Double> greedyRes = knap.greedyDensityApproach();
+        long timeGreedy = System.nanoTime() - startGreedy;
+
+        // Print and compare
+        System.out.printf("Brute-force: value=%.0f, weights=%s, time=%,dms%n",
+                bruteRes.second(),
+                bruteRes.first(),
+                timeBrute/1_000);
+
+        System.out.printf("Greedy-density: value=%.0f, weights=%s, time=%,dms%n",
+                greedyRes.second(),
+                greedyRes.first(),
+                timeGreedy/1_000);
     }
 
     private static void runKMeansClustererTests(List<Vector> vectors) {
