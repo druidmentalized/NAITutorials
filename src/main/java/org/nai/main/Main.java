@@ -1,12 +1,11 @@
 package org.nai.main;
 
 import org.nai.algorithms.Knapsack;
+import org.nai.data.Dataset;
 import org.nai.data.PrepareDataset;
 import org.nai.data.SplitDataset;
-import org.nai.data.Dataset;
 import org.nai.evaluation.EvaluationMetrics;
 import org.nai.models.*;
-import org.nai.models.KMeansClusterer;
 import org.nai.plot.KMeansClustersPlotter;
 import org.nai.structures.Cluster;
 import org.nai.structures.Pair;
@@ -29,9 +28,9 @@ public class Main {
         LabelEncoder irisEncoder = new LabelEncoder();
         FeatureEncoder irisFe = new FeatureEncoder();
         Dataset irisDataset = prepare.parseDataset(
-            "src/main/resources/csv/iris.csv",
-            irisEncoder, irisFe,
-            false, false
+                "src/main/resources/csv/iris.csv",
+                irisEncoder, irisFe,
+                false, false
         );
         SplitDataset irisSplit = prepare.trainTestSplit(irisDataset, 0.66);
 
@@ -72,9 +71,25 @@ public class Main {
     }
 
     private static void runAlgorithmsTests(List<Vector> inputVectors) {
+        // * Basic values test
         Vector itemWeights = new Vector(new double[]{8, 10, 3, 5, 2});
         Vector itemValues = new Vector(new double[]{10, 12, 5, 6, 2});
         double capacity = 10;
+        runKnapsackTests(itemWeights, itemValues, capacity);
+
+        System.out.println("\n Bigger values test:");
+
+        itemWeights = new Vector(new double[]{5, 12, 7, 18, 3, 14, 20, 1, 9, 16, 11, 8});
+        itemValues = new Vector(new double[]{10, 24, 15, 40, 7, 28, 50, 5, 18, 36, 30, 20});
+        capacity = 50;
+
+        runKnapsackTests(itemWeights, itemValues, capacity);
+
+        System.out.println("\nTeacher's values test:");
+        itemWeights = new Vector(new double[]{5, 3, 9, 2, 11, 4, 4, 10, 2, 6, 6, 2, 2, 1, 1, 3, 11, 8, 8, 7, 8, 8, 8, 7, 1, 2, 10, 2});
+        itemValues = new Vector(new double[]{4, 8, 43, 60, 63, 29, 44, 27, 95, 51, 22, 78, 85, 97, 64, 93, 31, 28, 22, 63, 89, 5, 98, 27, 63, 49, 31, 93});
+        capacity = 12;
+
         runKnapsackTests(itemWeights, itemValues, capacity);
     }
 
@@ -134,6 +149,11 @@ public class Main {
     }
 
     private static void runKnapsackTests(Vector itemWeights, Vector itemValues, double capacity) {
+        System.out.println("Running Knapsack test with:");
+        System.out.println("Item Weights: " + itemWeights);
+        System.out.println("Item Values: " + itemValues);
+        System.out.println("Capacity = " + capacity + "\n");
+
         Knapsack knap = new Knapsack(itemWeights, itemValues, capacity);
 
         // Brute-force timing
@@ -150,12 +170,12 @@ public class Main {
         System.out.printf("Brute-force: value=%.0f, weights=%s, time=%,dms%n",
                 bruteRes.second(),
                 bruteRes.first(),
-                timeBrute/1_000);
+                timeBrute / 1_000);
 
         System.out.printf("Greedy-density: value=%.0f, weights=%s, time=%,dms%n",
                 greedyRes.second(),
                 greedyRes.first(),
-                timeGreedy/1_000);
+                timeGreedy / 1_000);
     }
 
     private static void runKMeansClustererTests(List<Vector> vectors) {

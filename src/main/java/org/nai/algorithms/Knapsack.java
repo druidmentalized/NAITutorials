@@ -4,7 +4,7 @@ import org.nai.structures.Pair;
 import org.nai.structures.Vector;
 
 import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.Arrays;
 import java.util.List;
 
 public class Knapsack {
@@ -69,30 +69,37 @@ public class Knapsack {
         return maxValue;
     }
 
-    public Pair<Vector, Double> greedyDensityApproach() {
-        List<Integer> densitySortedIndices = new ArrayList<>();
-        for (int i = 0; i < itemWeights.size(); i++) {
-            densitySortedIndices.add(i);
-        }
+    public Pair<Vector,Double> greedyDensityApproach() {
+        int n = itemWeights.size();
 
-        densitySortedIndices.sort(Comparator.comparingDouble(
-                i -> itemValues.get((Integer) i) / itemWeights.get((Integer) i)).reversed());
+        Integer[] idx = new Integer[n];
+        for(int i=0;i<n;i++) idx[i]=i;
+        Arrays.sort(idx, (i,j) ->
+                Double.compare(
+                        itemValues.get(j)/itemWeights.get(j),
+                        itemValues.get(i)/itemWeights.get(i)
+                )
+        );
 
-        double currWeightSum = 0.0;
-        double valueSum = 0.0;
-        List<Double> returnSet = new ArrayList<>();
+        double[] picked = new double[n];
+        double weightSum = 0;
+        double valueSum = 0;
+        int arrIdx = 0;
 
-        for (int itemIdx : densitySortedIndices) {
+        for (int itemIdx : idx) {
             double weight = itemWeights.get(itemIdx);
             double value = itemValues.get(itemIdx);
 
-            if (currWeightSum + weight <= capacity) {
-                returnSet.add(weight);
-                currWeightSum += weight;
+            if (weightSum + weight <= capacity) {
+                picked[arrIdx++] = weight;
+                weightSum += weight;
                 valueSum += value;
             }
         }
 
-        return new Pair<>(new Vector(returnSet.stream().mapToDouble(Double::doubleValue).toArray()), valueSum);
+        return new Pair<>(
+                new Vector(Arrays.copyOf(picked, arrIdx)),
+                valueSum
+        );
     }
 }
