@@ -4,6 +4,8 @@ import org.nai.structures.Pair;
 import org.nai.structures.Vector;
 
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class Knapsack {
     private final Random random = new Random();
@@ -69,15 +71,15 @@ public class Knapsack {
         return maxValue;
     }
 
-    public Pair<Vector,Double> greedyDensityApproach() {
+    public Pair<Vector, Double> greedyDensityApproach() {
         int n = itemWeights.size();
 
         Integer[] idx = new Integer[n];
-        for(int i=0;i<n;i++) idx[i]=i;
-        Arrays.sort(idx, (i,j) ->
+        for (int i = 0; i < n; i++) idx[i] = i;
+        Arrays.sort(idx, (i, j) ->
                 Double.compare(
-                        itemValues.get(j)/itemWeights.get(j),
-                        itemValues.get(i)/itemWeights.get(i)
+                        itemValues.get(j) / itemWeights.get(j),
+                        itemValues.get(i) / itemWeights.get(i)
                 )
         );
 
@@ -107,55 +109,69 @@ public class Knapsack {
         Vector bestWeights = null;
         double maxValue = Double.NEGATIVE_INFINITY;
 
-        for (int restart = 0; restart < numberOfRestarts; restart++) {
-            Set<Integer> availableIndices = new HashSet<>();
-            for (int j = 0; j < itemWeights.size(); j++) {
-                availableIndices.add(j);
-            }
-            double currentValue = 0;
-            double currentWeight = 0;
+        for (int i = 0; i < numberOfRestarts; i++) {
+            Set<Integer> available = initializeIndices();
+            int start = pickRandomStart(available);
+            List<Integer> picked = localSearch(available, start);
+            double totalValue = computeTotalValue(picked);
 
-            // Random initial item
-            int startIndex = random.nextInt(itemWeights.size());
-            availableIndices.remove(startIndex);
-            List<Integer> currentIndices = new ArrayList<>(List.of(startIndex));
-            currentWeight += itemWeights.get(startIndex);
-            currentValue += itemValues.get(startIndex);
-
-            boolean improved = true;
-
-            while (improved) {
-                improved = false;
-                int bestMove = -1;
-                double bestValue = currentValue;
-
-                for (int itemIdx : availableIndices) {
-                    double newWeight = currentWeight + itemWeights.get(itemIdx);
-                    if (newWeight <= capacity) {
-                        double newValue = currentValue + itemValues.get(itemIdx);
-                        if (newValue > bestValue) {
-                            bestMove = itemIdx;
-                            bestValue = newValue;
-                            improved = true;
-                        }
-                    }
-                }
-
-                if (improved && bestMove != -1) {
-                    availableIndices.remove(bestMove);
-                    currentIndices.add(bestMove);
-                    currentWeight += itemWeights.get(bestMove);
-                    currentValue += itemValues.get(bestMove);
-                }
-            }
-
-            if (currentValue > maxValue) {
-                maxValue = currentValue;
-                double[] selectedWeights = currentIndices.stream().mapToDouble(itemWeights::get).toArray();
-                bestWeights = new Vector(selectedWeights);
+            if (totalValue > maxValue) {
+                maxValue = totalValue;
+                bestWeights = extractWeights(picked);
             }
         }
 
         return new Pair<>(bestWeights, maxValue);
+    }
+
+    private Set<Integer> initializeIndices() {
+        return IntStream.range(0, itemWeights.size()).boxed().collect(Collectors.toSet());
+    }
+
+    private int pickRandomStart(Set<Integer> available) {
+        List<Integer> list = new ArrayList<>(available);
+        int start = list.get(random.nextInt(list.size()));
+        available.remove(start);
+        return start;
+    }
+
+    private List<Integer> localSearch(Set<Integer> available, int start) {
+        List<Integer> selected = new ArrayList<>(List.of(start));
+        double currentWeight = itemWeights.get(start);
+        double currentValue = itemValues.get(start);
+
+        boolean improved = true;
+        while (improved) {
+            improved = false;
+            int bestIdx = -1;
+            double bestVal = currentValue;
+
+            for (int i : available) {
+                double newWeight = currentWeight + itemWeights.get(i);
+                double newVal = currentValue + itemValues.get(i);
+
+                if (newWeight > capacity || newVal <= bestVal) continue;
+
+                bestIdx = i;
+                bestVal = newVal;
+                improved = true;
+            }
+
+            if (!improved) continue;
+            available.remove(bestIdx);
+            selected.add(bestIdx);
+            currentWeight += itemWeights.get(bestIdx);
+            currentValue = bestVal;
+        }
+
+        return selected;
+    }
+
+    private double computeTotalValue(List<Integer> indices) {
+        return indices.stream().mapToDouble(itemValues::get).sum();
+    }
+
+    private Vector extractWeights(List<Integer> indices) {
+        return new Vector(indices.stream().mapToDouble(itemWeights::get).toArray());
     }
 }
