@@ -51,6 +51,13 @@ Each component is organized under its own package in `src/main/java/org/nai/`:
 - Outputs the best subset of item weights and value sum.
 - Measures and compares runtimes between methods.
 
+### Task 7: Knapsack Problem (Hill Climbing)
+- Implements **Hill Climbing with random restarts** for the 0/1 Knapsack problem.
+- Each run starts from a randomly selected item and greedily adds available items to improve the solution.
+- Tracks the best solution across multiple restarts.
+- Outputs the final best subset of weights and its total value.
+- Compares runtime and solution quality against Brute-force and Greedy approaches.
+
 ---
 
 ## Shared Utilities
