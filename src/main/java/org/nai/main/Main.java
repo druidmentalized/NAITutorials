@@ -156,26 +156,37 @@ public class Main {
 
         Knapsack knap = new Knapsack(itemWeights, itemValues, capacity);
 
-        // Brute-force timing
-        long startBrute = System.nanoTime();
-        Pair<List<Vector>, Double> bruteRes = knap.bruteForce();
-        long timeBrute = System.nanoTime() - startBrute;
+        //Hill climbing timing
+        long startHill = System.nanoTime();
+        Pair<Vector, Double> hillRes = knap.hillClimbing(7);
+        long timeHill = System.nanoTime() - startHill;
+
+        // Print
+        System.out.printf("Hill climbing: value=%.0f, weights=%s, time=%,dms%n",
+                hillRes.second(),
+                hillRes.first(),
+                timeHill / 1_000);
 
         // Greedy timing
         long startGreedy = System.nanoTime();
         Pair<Vector, Double> greedyRes = knap.greedyDensityApproach();
         long timeGreedy = System.nanoTime() - startGreedy;
 
-        // Print and compare
-        System.out.printf("Brute-force: value=%.0f, weights=%s, time=%,dms%n",
-                bruteRes.second(),
-                bruteRes.first(),
-                timeBrute / 1_000);
-
         System.out.printf("Greedy-density: value=%.0f, weights=%s, time=%,dms%n",
                 greedyRes.second(),
                 greedyRes.first(),
                 timeGreedy / 1_000);
+
+
+        // Brute-force timing
+        long startBrute = System.nanoTime();
+        Pair<List<Vector>, Double> bruteRes = knap.bruteForce();
+        long timeBrute = System.nanoTime() - startBrute;
+
+        System.out.printf("Brute-force: value=%.0f, weights=%s, time=%,dms%n",
+                bruteRes.second(),
+                bruteRes.first(),
+                timeBrute / 1_000);
     }
 
     private static void runKMeansClustererTests(List<Vector> vectors) {

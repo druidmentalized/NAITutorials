@@ -3,14 +3,14 @@ package org.nai.algorithms;
 import org.nai.structures.Pair;
 import org.nai.structures.Vector;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 public class Knapsack {
-    private Vector itemWeights;
-    private Vector itemValues;
-    private double capacity;
+    private final Random random = new Random();
+
+    private final Vector itemWeights;
+    private final Vector itemValues;
+    private final double capacity;
 
     public Knapsack(Vector itemWeights, Vector itemValues, double capacity) {
         this.itemWeights = itemWeights;
@@ -101,5 +101,61 @@ public class Knapsack {
                 new Vector(Arrays.copyOf(picked, arrIdx)),
                 valueSum
         );
+    }
+
+    public Pair<Vector, Double> hillClimbing(int numberOfRestarts) {
+        Vector bestWeights = null;
+        double maxValue = Double.NEGATIVE_INFINITY;
+
+        for (int restart = 0; restart < numberOfRestarts; restart++) {
+            Set<Integer> availableIndices = new HashSet<>();
+            for (int j = 0; j < itemWeights.size(); j++) {
+                availableIndices.add(j);
+            }
+            double currentValue = 0;
+            double currentWeight = 0;
+
+            // Random initial item
+            int startIndex = random.nextInt(itemWeights.size());
+            availableIndices.remove(startIndex);
+            List<Integer> currentIndices = new ArrayList<>(List.of(startIndex));
+            currentWeight += itemWeights.get(startIndex);
+            currentValue += itemValues.get(startIndex);
+
+            boolean improved = true;
+
+            while (improved) {
+                improved = false;
+                int bestMove = -1;
+                double bestValue = currentValue;
+
+                for (int itemIdx : availableIndices) {
+                    double newWeight = currentWeight + itemWeights.get(itemIdx);
+                    if (newWeight <= capacity) {
+                        double newValue = currentValue + itemValues.get(itemIdx);
+                        if (newValue > bestValue) {
+                            bestMove = itemIdx;
+                            bestValue = newValue;
+                            improved = true;
+                        }
+                    }
+                }
+
+                if (improved && bestMove != -1) {
+                    availableIndices.remove(bestMove);
+                    currentIndices.add(bestMove);
+                    currentWeight += itemWeights.get(bestMove);
+                    currentValue += itemValues.get(bestMove);
+                }
+            }
+
+            if (currentValue > maxValue) {
+                maxValue = currentValue;
+                double[] selectedWeights = currentIndices.stream().mapToDouble(itemWeights::get).toArray();
+                bestWeights = new Vector(selectedWeights);
+            }
+        }
+
+        return new Pair<>(bestWeights, maxValue);
     }
 }
